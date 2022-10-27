@@ -36,6 +36,14 @@ def getIps(filename):
                 dest_ip[row[2]] += 1
         return source_ip, dest_ip
 
+def getIndividualIps(filename):
+    return_list = []
+    with open(filename, newline='') as csvfile:
+        spamreader = csv.reader(csvfile)
+        for row in spamreader:
+            if row[0] not in return_list:
+                return_list.append(row[0])
+    return return_list
 
 def main():
     # filename = './traces/google/google_trace0.pcap'
