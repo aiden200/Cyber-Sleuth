@@ -20,7 +20,13 @@ TODO:
     protocals
 
 Open google, take the ip address, which will include background processes, build a csv file. start building profile on spotify traces.
+Filter out Carleton ip addresses and arp
+Include frequencies
 
+Experiment ip addresses
+take just background
+compare between different members
+compare between different os's 
 
 '''
     
