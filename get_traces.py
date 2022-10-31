@@ -50,7 +50,6 @@ ips on web browser vs app?
 ips on app logged out vs logged in
 
 
-test if the file automatically creates
 
 
 '''
@@ -104,25 +103,26 @@ def test():
 
 
 '''
-Function: sniff_website_1000
-Sniffs 1000 packets on a website and creates the csv file and the pcap file.
+Function: sniff_website
+Sniffs count packets on a website and creates the csv file and the pcap file.
 
 Parameters:
     i - int, iteration(usually we are calling  this function multiple times)
     website - str, the website we are sniffing (ex: "www.google.com")
     name - str, the name we are using for the file (ex: "google")
+    count - int, number of packets sniffing, default to 1000
 Returns:
     csv file under: csv_files/[name]/[name_trace][i].csv
     pcap file under: traces/[name]/[name_trace][i].pcap
     function returns nothing
 Example usage:
-    sniff_website_1000(0, "www.google.com", "google")
+    sniff_website(0, "www.google.com", "google")
 Notes:
     for the subprocess.open tshark command to work, you might need to link tshark 
     mine was done like this:
         tshark ln -s /Applications/Wireshark.app/Contents/MacOS/tshark /usr/local/bin/tshark
 '''
-def sniff_website_1000(i, website, name):
+def sniff_website(i, website, name, count = 1000):
     
     browser = webdriver.Chrome()
     browser.get(website)
@@ -267,8 +267,42 @@ def build_ip_profiles(website):
 
 
 
-        
 
+'''
+Builds a profile of background apps.
+Sniffs 500 packets and closes
+
+Notes:
+Consider building off of stopping after time
+'''
+def build_background_trace_profile():
+    start = time.time()
+    end = time.time()
+    time_consumed=end-start
+    for i in range(100):
+        MYDIR = (f"traces/background")
+        CHECK_FOLDER = os.path.isdir(MYDIR)
+        # If folder doesn't exist, then create it.
+        if not CHECK_FOLDER:
+            print(f"Folder background does not exist. Creating new....")
+            os.makedirs(MYDIR)
+            os.makedirs(f"csv_files/background")
+        capture = sniff(count=500)
+        wrpcap(f"traces/background/background_trace{i}.pcap", capture)
+        try:
+            with open(f'csv_files/background/background_trace{i}.csv','w') as f:
+                subprocess.run(f"tshark -r traces/background/background_trace{i}.pcap -T fields\
+                -e frame.number -e ip.src -e ip.dst \
+                -E header=y -E separator=/t".split(), stdout =f)
+        except Exception as e:
+            print(f"Iteration: {i}\n error: {e}")
+    
+    build_ip_profiles("background")
+
+
+#TODO:  def build_chrome_profile 
+
+def 
 
 
 '''
@@ -280,11 +314,11 @@ def main():
             "https://www.discord.com","https://www.gradescope.com", "https://www.linkedin.com"]
     n = 3
     for i in range(100):
-        # sniff_website_1000(i, "www.google.com", "google")
+        # sniff_website(i, "www.google.com", "google")
         # get_noisy_trace_spotify(i, possible_websites, n)
         pass
     # build_ip_profiles("google")
-    # sniff_website_1000(1, "www.google.com", "google")
-
+    # sniff_website(1, "www.google.com", "google")
 main()
+
     
