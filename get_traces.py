@@ -299,10 +299,13 @@ def build_background_trace_profile():
     
     build_ip_profiles("background")
 
+##################################################################################################
+# After this section its the usage of the above functions.
+##################################################################################################
 
 #TODO:  def build_chrome_profile 
 
-def 
+#TODO: def build_profile_without_noise(website, name):
 
 
 '''
