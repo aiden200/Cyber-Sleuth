@@ -65,6 +65,17 @@ import os
 from glob import glob
 import csv
 from analyze_pcap import getIps, getIndividualIps
+import chromedriver_autoinstaller
+
+def install_chromdriver():
+    #Installs chromedriver
+    print("Installing chromedriver")
+    try:
+        chromedriver_autoinstaller.install()
+        return 0
+    except Exception as e:
+        print(f"Failed to download chromdriver with exception: {e}")
+        return -1
 
 
 
@@ -125,7 +136,8 @@ Notes:
 def sniff_website(i, website, name, count = 1000):
     
     browser = webdriver.Chrome()
-    browser.get(website)
+    if website != 0:
+        browser.get(website)
     MYDIR = (f"traces/{name}")
     CHECK_FOLDER = os.path.isdir(MYDIR)
     # If folder doesn't exist, then create it.
@@ -299,11 +311,50 @@ def build_background_trace_profile():
     
     build_ip_profiles("background")
 
+
+'''
+Filters out the ips. subtracts ips that exist in filter_website and target_website. \
+    returns ips left from target_website
+'''
+def filter_ips(target_website, filter_website):
+    if not (os.path.exists(f"ip_profiles/{target_website}") and os.path.exists(f"ip_profiles/{filter_website}")):
+        if not os.path.exists(f"ip_profiles/{target_website}"):
+            print(f"Error in function filter_ips: File does not exist: ip_profiles/{target_website}")
+        if not os.path.exists(f"ip_profiles/{filter_website}"):
+            print(f"Error in function filter_ips: File does not exist: ip_profiles/{filter_website}")
+        return -1
+    
+    target_ips = getIndividualIps(f"ip_profiles/{target_website}")
+    filter_ips = getIndividualIps(f"ip_profiles/{filter_website}")
+
+    filtered_list = []
+    for ip in target_ips:
+        if ip not in filter_ips:
+            filtered_list.append(ip)
+    
+    with open(f"ip_profiles/{target_website}", "w") as csv_writer:
+        writer_object = csv.writer(csv_writer)
+        for ip in filtered_list:
+            writer_object.writerow([ip])
+    return 0
+
+
+
+
+
 ##################################################################################################
 # After this section its the usage of the above functions.
 ##################################################################################################
 
-#TODO:  def build_chrome_profile 
+def build_chrome_profile():
+    build_background_trace_profile()
+    for i in range(100):
+        sniff_website(i, 0, "chrome")
+    build_ip_profiles("chrome")
+    if filter_ips("chrome", "background") != 0:
+        print("Failed in making chrome profile")
+
+
 
 #TODO: def build_profile_without_noise(website, name):
 
@@ -312,6 +363,7 @@ def build_background_trace_profile():
 Usages of the functions above.
 '''
 def main():
+    install_chromdriver() # MUST CALL
     possible_websites = ["https://google.com", "https://youtube.com","https://www.reddit.com/",\
          "https://www.carleton.edu/", "https://www.gmail.com", "https://www.github.com", \
             "https://www.discord.com","https://www.gradescope.com", "https://www.linkedin.com"]
@@ -321,7 +373,7 @@ def main():
         # get_noisy_trace_spotify(i, possible_websites, n)
         pass
     # build_ip_profiles("google")
-    # sniff_website(1, "www.google.com", "google")
+    sniff_website(1, "www.google.com", "google")
 main()
 
     
