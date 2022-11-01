@@ -356,7 +356,14 @@ def build_chrome_profile():
 
 
 
-#TODO: def build_profile_without_noise(website, name):
+def build_profile_without_noise(website, name):
+    build_chrome_profile() # Maybe we shouldn't call this too many times. 
+    for i in range(100):
+        sniff_website(i, website, name)
+    build_ip_profiles(name)
+    filter_ips(name,"background")
+    filter_ips(name,"chrome")
+    
 
 
 '''
