@@ -49,7 +49,11 @@ Compare ips in different location
 ips on web browser vs app?
 ips on app logged out vs logged in
 
+how much overlap of the ip addresses means spotify where in there
 
+
+ml
+- automating the pattern learning in the data
 
 
 '''
@@ -357,7 +361,7 @@ def build_chrome_profile():
 
 
 def build_profile_without_noise(website, name):
-    build_chrome_profile() # Maybe we shouldn't call this too many times. 
+    # build_chrome_profile() # Maybe we shouldn't call this too many times. 
     for i in range(100):
         sniff_website(i, website, name)
     build_ip_profiles(name)
@@ -365,22 +369,50 @@ def build_profile_without_noise(website, name):
     filter_ips(name,"chrome")
     
 
+    
+def check_website_in_noisy_trace(file, name):
+    if not os.path.exists(f"ip_profiles/{name}"):
+        print(f"Error in function check_website_in_noisy_trace, file ip_profiles/{name} does not exist")
+    else:
+        try:
+            website_ip_list = getIndividualIps(f"ip_profiles/{name}")
+            with open(f'csv_files/compare_file.csv','w') as f:
+                subprocess.run(f"tshark -r {file} -T fields\
+                -e frame.number -e ip.src -e ip.dst \
+                -E header=y -E separator=/t".split(), stdout =f)
+            src_ip, dst_ip = getIndividualIps(f"csv_files/compare_file.csv")
+            return_list = []
+            for ip in src_ip:
+                if ip in website_ip_list:
+                    return_list.append(ip)
+            for ip in dst_ip:
+                if ip in website_ip_list:
+                    return_list.append(ip)
+            if not return_list:
+                return 1, return_list
+            return 0, return_list
+        except Exception as e:
+            print(f"Error in check_website_in_noisy_trace error: {e}")
+
+
 
 '''
 Usages of the functions above.
 '''
 def main():
     install_chromdriver() # MUST CALL
-    possible_websites = ["https://google.com", "https://youtube.com","https://www.reddit.com/",\
-         "https://www.carleton.edu/", "https://www.gmail.com", "https://www.github.com", \
-            "https://www.discord.com","https://www.gradescope.com", "https://www.linkedin.com"]
-    n = 3
-    for i in range(100):
-        # sniff_website(i, "www.google.com", "google")
-        # get_noisy_trace_spotify(i, possible_websites, n)
-        pass
+    # possible_websites = ["https://google.com", "https://youtube.com","https://www.reddit.com/",\
+    #      "https://www.carleton.edu/", "https://www.gmail.com", "https://www.github.com", \
+    #         "https://www.discord.com","https://www.gradescope.com", "https://www.linkedin.com"]
+    # n = 3
+    # for i in range(100):
+    #     # sniff_website(i, "www.google.com", "google")
+    #     # get_noisy_trace_spotify(i, possible_websites, n)
+    #     pass
+
+    build_chrome_profile()
     # build_ip_profiles("google")
-    sniff_website(1, "www.google.com", "google")
+    # sniff_website(1, "www.google.com", "google")
 main()
 
     
