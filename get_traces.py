@@ -321,22 +321,23 @@ Filters out the ips. subtracts ips that exist in filter_website and target_websi
     returns ips left from target_website
 '''
 def filter_ips(target_website, filter_website):
-    if not (os.path.exists(f"ip_profiles/{target_website}") and os.path.exists(f"ip_profiles/{filter_website}")):
-        if not os.path.exists(f"ip_profiles/{target_website}"):
-            print(f"Error in function filter_ips: File does not exist: ip_profiles/{target_website}")
-        if not os.path.exists(f"ip_profiles/{filter_website}"):
-            print(f"Error in function filter_ips: File does not exist: ip_profiles/{filter_website}")
+
+    if not os.path.exists(f"ip_profiles/{target_website}.csv"):
+        print(f"Error in function filter_ips: target website does not exist: ip_profiles/{target_website}.csv")
+        return -1
+    if not os.path.exists(f"ip_profiles/{filter_website}.csv"):
+        print(f"Error in function filter_ips: filter website does not exist: ip_profiles/{filter_website}.csv")
         return -1
     
-    target_ips = getIndividualIps(f"ip_profiles/{target_website}")
-    filter_ips = getIndividualIps(f"ip_profiles/{filter_website}")
+    target_ips = getIndividualIps(f"ip_profiles/{target_website}.csv")
+    filter_ips = getIndividualIps(f"ip_profiles/{filter_website}.csv")
 
     filtered_list = []
     for ip in target_ips:
         if ip not in filter_ips:
             filtered_list.append(ip)
     
-    with open(f"ip_profiles/{target_website}", "w") as csv_writer:
+    with open(f"ip_profiles/{target_website}.csv", "w") as csv_writer:
         writer_object = csv.writer(csv_writer)
         for ip in filtered_list:
             writer_object.writerow([ip])
