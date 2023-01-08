@@ -389,8 +389,7 @@ def check_website_in_noisy_trace(file, name):
                 -E header=y -E separator=/t".split(), stdout =f)
             src_ip, dst_ip = getIps(f"csv_files/compare_file.csv")
             return_list = []
-            print(src_ip, dst_ip)
-            print(website_ip_list)
+
             for ip in src_ip:
                 if ip in website_ip_list and ip not in return_list:
                     return_list.append(ip)
