@@ -292,6 +292,7 @@ Notes:
 Consider building off of stopping after time
 '''
 def build_background_trace_profile():
+    print("Starting to build background profile")
     start = time.time()
     end = time.time()
     time_consumed=end-start
@@ -314,6 +315,7 @@ def build_background_trace_profile():
             print(f"Iteration: {i}\n error: {e}")
     
     build_ip_profiles("background")
+    print("done building background profile")
 
 
 '''
@@ -344,7 +346,7 @@ def filter_ips(target_website, filter_website):
     return 0
 
 
-
+#write a function that counts nnumber of packets its showing up
 
 
 ##################################################################################################
@@ -352,42 +354,48 @@ def filter_ips(target_website, filter_website):
 ##################################################################################################
 
 def build_chrome_profile():
+    print("Starting to build chrome profile")
     build_background_trace_profile()
-    for i in range(100):
+    for i in range(10):
         sniff_website(i, 0, "chrome")
     build_ip_profiles("chrome")
     if filter_ips("chrome", "background") != 0:
         print("Failed in making chrome profile")
+    print("Done with chrome profile")
 
 
 
 def build_profile_without_noise(website, name):
+    print(f"Starting to build {name}")
     # build_chrome_profile() # Maybe we shouldn't call this too many times. 
-    for i in range(100):
+    for i in range(50):
         sniff_website(i, website, name)
     build_ip_profiles(name)
     filter_ips(name,"background")
     filter_ips(name,"chrome")
+    print(f"Done with building {name}")
     
 
     
 def check_website_in_noisy_trace(file, name):
-    if not os.path.exists(f"ip_profiles/{name}"):
+    if not os.path.exists(f"ip_profiles/{name}.csv"):
         print(f"Error in function check_website_in_noisy_trace, file ip_profiles/{name} does not exist")
     else:
         try:
-            website_ip_list = getIndividualIps(f"ip_profiles/{name}")
+            website_ip_list = getIndividualIps(f"ip_profiles/{name}.csv")
             with open(f'csv_files/compare_file.csv','w') as f:
                 subprocess.run(f"tshark -r {file} -T fields\
                 -e frame.number -e ip.src -e ip.dst \
                 -E header=y -E separator=/t".split(), stdout =f)
-            src_ip, dst_ip = getIndividualIps(f"csv_files/compare_file.csv")
+            src_ip, dst_ip = getIps(f"csv_files/compare_file.csv")
             return_list = []
+            print(src_ip, dst_ip)
+            print(website_ip_list)
             for ip in src_ip:
-                if ip in website_ip_list:
+                if ip in website_ip_list and ip not in return_list:
                     return_list.append(ip)
             for ip in dst_ip:
-                if ip in website_ip_list:
+                if ip in website_ip_list and ip not in return_list:
                     return_list.append(ip)
             if not return_list:
                 return 1, return_list
@@ -411,9 +419,12 @@ def main():
     #     # get_noisy_trace_spotify(i, possible_websites, n)
     #     pass
 
-    build_chrome_profile()
+    # build_chrome_profile()
+    # build_profile_without_noise("https://www.spotify.com", "spotify")
     # build_ip_profiles("google")
     # sniff_website(1, "www.google.com", "google")
+
+    print(check_website_in_noisy_trace("./traces/spotify/luke.pcapng", "spotify"))
 main()
 
     
