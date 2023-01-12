@@ -1,7 +1,8 @@
 '''
-Automation code to get traces on spotify.
 
-Data is stored in the traces folder
+Automation code to get traces from background, browser, and websites using Selenium ChromeDriver
+Data is stored in the traces, csv, ip_profiles folders.
+Built for virtual environment. 
 
 To start venv, cd into comps directory and type source bin/activate
 Required packages:
@@ -10,69 +11,32 @@ Required packages:
         Chrome driver version 106
     scapy - take the wireshark traces: documentation https://scapy.readthedocs.io/en/latest/usage.html
 
-For future ML:
-    PyTorch
-    Seaborn
-    TSAI
-
 Developed by: Aiden Chang
-Last Updated: 10/30/2022 at 10:00 PM by Aiden Chang
+Last Updated: 1/11/2022 at 10:00 PM by Anders Shenholm
 Please contact Aiden Chang for questions
-'''
 
 '''
-TODO:
-    protocals
 
-Open google, take the ip address, which will include background processes, build a csv file. start building profile on spotify traces.
-Filter out Carleton ip addresses and arp
-Include frequencies
-
-Experiment ip addresses
-take just background
-compare between different members
-compare between different os's 
-comment out better and update
-check if selnium can open apps
-
-build background profile
-chrome profile = chrome traces - background profile
-spotify profile = spotify traces - chrome profile - background profile
-
-Experiments
-Chrome profile
-Chrome while searching profile
-
-Chrome profile - Chrome while searching profile > 1
-
-Compare ips in different location
-ips on web browser vs app?
-ips on app logged out vs logged in
-
-how much overlap of the ip addresses means spotify where in there
-
-
-ml
-- automating the pattern learning in the data
-
-
-'''
-    
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-import time
 from scapy.all import *
+from scapy.utils import RawPcapReader
+from glob import glob
+import chromedriver_autoinstaller
+import time
 import random
 import subprocess
 import os
-from glob import glob
 import csv
-from analyze_pcap import getIps, getIndividualIps
-import chromedriver_autoinstaller
+import sys
+import datetime
 
-def install_chromdriver():
-    #Installs chromedriver
+'''
+Installs chromedriver
+Required for any Selenium Chrome activity
+'''
+def install_chromedriver():
     print("Installing chromedriver")
     try:
         chromedriver_autoinstaller.install()
@@ -82,39 +46,46 @@ def install_chromdriver():
         return -1
 
 
+'''
+Reads a csv file and returns two dictionaries. 
+source_ip - a dic with unique ip's of the source and the count of each ip
+dest_ip - a dic with unique ip's of the destination and the count of each ip
+'''
+def get_ips(filename):
+    try:
+        with open(filename, newline='') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter='\t', quotechar='|')
+            next(spamreader)
+            source_ip = {}
+            dest_ip = {}
+            for row in spamreader:
+                if row[1] not in source_ip:
+                    source_ip[row[1]] = 1
+                else:
+                    source_ip[row[1]] += 1
+                if row[2] not in dest_ip:
+                    dest_ip[row[2]] = 1
+                else:
+                    dest_ip[row[2]] += 1
+            return source_ip, dest_ip
+    except Exception as e:
+        print(f"Error in function get_ips: {e}")
+
 
 '''
-Test function, used to experiment and comment some code that might be usefull in the future
+Reads a csv file and returns a list of unique ips
 '''
-def test():
-    # chromedriver = "./chromedriver.exe"
-    # options = Options()
-    # options.binary_location = '/path/to/chrome'
-    # driver = webdriver.Chrome(chromedriver, chrome_options=options)
-    # driver.find_element_by_css_selector('button.Button-qlcn5g-0.kgFBvD').click() #playing by clicking the play button
-    # t = AsyncSniffer()#iface="eth0", offline="file.pcap") # not sure 
-    # t.start()
-    # time.sleep(3)
-    # results = t.stop()
-    # capture.summary()
-    # driver.find_element_by_css_selector('button.Button-qlcn5g-0.kgFBvD').click() #pausing by clicking the play button
-    # elem = browser.find_element(By.NAME, 'p')  # Find the search box
-    # elem.send_keys('seleniumhq' + Keys.RETURN)
-    
-    #notes for second function
-    # body = browser.find_element_by_tag_name("body")
-    # search_box = browser.find_element("tag_name", "body")
-    # search_box.send_keys('ChromeDriver')
-    # search_box.submit()
-    # Open a new window
-    
-    # Switch to the new window and open new URL
-    '''
-    offline analyzing
-    pkts = sniff(offline='http_google.pcap')
-    pkts.nsummary()s
-    '''
-    return None
+def get_individual_ips(filename):
+    return_list = []
+    try:
+        with open(filename, newline='') as csvfile:
+            spamreader = csv.reader(csvfile)
+            for row in spamreader:
+                if row[0] not in return_list:
+                    return_list.append(row[0])
+        return return_list
+    except Exception as e:
+        print(f"Error in function get_individual_ips: {e}")
 
 
 '''
@@ -122,112 +93,46 @@ Function: sniff_website
 Sniffs count packets on a website and creates the csv file and the pcap file.
 
 Parameters:
-    i - int, iteration(usually we are calling  this function multiple times)
+    trace_count - int, number of traces to take
     website - str, the website we are sniffing (ex: "www.google.com")
     name - str, the name we are using for the file (ex: "google")
-    count - int, number of packets sniffing, default to 1000
+    packet_count - int, number of packets sniffing, default to 1000
 Returns:
     csv file under: csv_files/[name]/[name_trace][i].csv
     pcap file under: traces/[name]/[name_trace][i].pcap
     function returns nothing
 Example usage:
-    sniff_website(0, "www.google.com", "google")
+    sniff_website(20, "https://www.google.com", "google", 500)
 Notes:
     for the subprocess.open tshark command to work, you might need to link tshark 
     mine was done like this:
         tshark ln -s /Applications/Wireshark.app/Contents/MacOS/tshark /usr/local/bin/tshark
 '''
-def sniff_website(i, website, name, count = 1000):
-    
-    browser = webdriver.Chrome()
-    if website != 0:
-        browser.get(website)
+def sniff_website(trace_count, website, name, packet_count = 1000):
     MYDIR = (f"traces/{name}")
-    CHECK_FOLDER = os.path.isdir(MYDIR)
-    # If folder doesn't exist, then create it.
-    if not CHECK_FOLDER:
-        print(f"Folder {name} does not exist. Creating new....")
+    if not os.path.isdir(MYDIR):
+        print(f"Folder {MYDIR} does not exist. Creating new....")
         os.makedirs(MYDIR)
-        os.makedirs(f"csv_files/{name}")
-    capture = sniff(count=1000)
-    wrpcap(f"traces/{name}/{name}_trace{i}.pcap", capture)
-    browser.quit()
-    try:
-        with open(f'csv_files/{name}/{name}_trace{i}.csv','w') as f:
-            subprocess.run(f"tshark -r traces/{name}/{name}_trace{i}.pcap -T fields\
-            -e frame.number -e ip.src -e ip.dst \
-            -E header=y -E separator=/t".split(), stdout =f)
-    except Exception as e:
-        print(f"Iteration: {i}\n error: {e}")
+    MYDIR = (f"csv_files/{name}")
+    if not os.path.isdir(MYDIR):
+        print(f"Folder {MYDIR} does not exist. Creating new....")
+        os.makedirs(MYDIR)
 
+    for i in range(1, trace_count + 1):
+        browser = webdriver.Chrome()
+        if website != 0:
+            browser.get(website)
+        capture = sniff(packet_count)
+        wrpcap(f"traces/{name}/{name}_trace{i}.pcap", capture)
+        browser.quit()
+        try:
+            with open(f'csv_files/{name}/{name}_trace{i}.csv','w') as f:
+                subprocess.run(f"tshark -r traces/{name}/{name}_trace{i}.pcap -T fields\
+                -e frame.number -e ip.src -e ip.dst \
+                -E header=y -E separator=/t".split(), stdout =f)
+        except Exception as e:
+            print(f"Iteration in sniff_website: {i}\n error: {e}")
 
-
-
-'''
-Function: get_noisy_trace_spotify
-Sniffs 3000 packets after choosing and opening n websites from the list possible_websites. \
-    A coin is flipped, if the result is 1, spotify will also be opened. Creates the csv and pcap file
-    
-Parameters:
-    i - int, iteration(usually we are calling  this function multiple times)
-    possible_websites - list of strings, the possible websites to open
-        ex: possible_websites = ["https://google.com", "https://youtube.com","https://www.reddit.com/",\
-         "https://www.carleton.edu/", "https://www.gmail.com", "https://www.github.com", \
-            "https://www.discord.com","https://www.gradescope.com", "https://www.linkedin.com"]
-    n - int, number of random websites to open
-Returns:
-    if spotify was NOT opened:
-        csv file under: traces/noisy_traces/without_spotify/noisy_non_spotify[i].pcap
-        pcap file under: csv_files/noisy_traces/without_spotify/noisy_non_spotify[i].csv
-    if spotify was opened:
-        csv file under: traces/noisy_traces/with_spotify/noisy_spotify[i].pcap
-        pcap file under: csv_files/noisy_traces/with_spotify/noisy_spotify[i].csv
-    function returns nothing
-Example usage:
-    get_noisy_trace_spotify(0, ["www.google.com","www.yahoo.com"], 1)
-Notes:
-    None
-'''
-def get_noisy_trace_spotify(i, possible_websites, n):
-    if n > len(possible_websites):
-        print("Error in function get_noisy_trace_spotify: random sample size larger than list possible_websites") 
-        return
-    browser = webdriver.Chrome()
-    possible_websites = ["https://google.com", "https://youtube.com","https://www.reddit.com/",\
-         "https://www.carleton.edu/", "https://www.gmail.com", "https://www.github.com", \
-            "https://www.discord.com","https://www.gradescope.com", "https://www.linkedin.com"]
-    open_website = random.choices(possible_websites, k=n)
-    flip = random.randint(0, 1)
-    j = 0
-
-    if flip:
-        browser.get('https://spotify.com')
-        browser.execute_script("window.open('');")
-        j+=1
-        browser.switch_to.window(browser.window_handles[j])
-
-    for websites in open_website:
-        browser.get(websites)
-        browser.execute_script("window.open('');")
-        j +=1
-        browser.switch_to.window(browser.window_handles[j])
-    capture = sniff(count=3000)
-
-    
-    name = f"traces/noisy_traces/without_spotify/noisy_non_spotify{i}.pcap"
-    csv_name = f"csv_files/noisy_traces/without_spotify/noisy_non_spotify{i}.csv"
-    if flip:
-        name = f"traces/noisy_traces/with_spotify/noisy_spotify{i}.pcap"
-        csv_name = f"csv_files/noisy_traces/with_spotify/noisy_spotify{i}.csv"
-    wrpcap(name, capture)
-    try:
-        with open(csv_name,'w') as f:
-            subprocess.run(f"tshark -r {name} -T fields\
-            -e frame.number -e ip.src -e ip.dst \
-            -E header=y -E separator=/t".split(), stdout =f)
-    except Exception as e:
-        print(f"Iteration: {i}\n error: {e}")
-    browser.quit()
 
 
 '''
@@ -242,10 +147,9 @@ Returns:
 Example usage:
     build_ip_profiles("google")
 Notes:
-    If the folder does not exist in csv files it will throw and error.
+    If the folder does not exist in csv files it will throw an error.
 '''
 def build_ip_profiles(website):
-    # curr_path = os.path.dirname(os.path.abspath(__file__))
     csv_profile_list = glob("csv_files/*")
     folder = ""
     for name in csv_profile_list:
@@ -261,11 +165,11 @@ def build_ip_profiles(website):
         write_path = f"./ip_profiles/{website}.csv"
         if os.path.exists(write_path):
             write_type = "a"
-            ip_sets = getIndividualIps(write_path)
+            ip_sets = get_individual_ips(write_path)
 
         csv_files = glob(f"{folder}/*")
         for file in csv_files:
-            src_ip, dst_ip = getIps(file)
+            src_ip, dst_ip = get_ips(file)
 
             for key in src_ip:
                 if key and key not in ip_sets:
@@ -275,55 +179,29 @@ def build_ip_profiles(website):
                 if key2 and key2 not in ip_sets:
                     new_ips.append(key2)
                     ip_sets.append(key2)
-        # print(new_ips)
+                    
         with open(write_path, write_type) as csv_writer:
             writer_object = csv.writer(csv_writer)
             for ip in new_ips:
                 writer_object.writerow([ip])
 
 
-
-
 '''
-Builds a profile of background apps.
-Sniffs 500 packets and closes
-
-Notes:
-Consider building off of stopping after time
-'''
-def build_background_trace_profile():
-    print("Starting to build background profile")
-    start = time.time()
-    end = time.time()
-    time_consumed=end-start
-    for i in range(100):
-        MYDIR = (f"traces/background")
-        CHECK_FOLDER = os.path.isdir(MYDIR)
-        # If folder doesn't exist, then create it.
-        if not CHECK_FOLDER:
-            print(f"Folder background does not exist. Creating new....")
-            os.makedirs(MYDIR)
-            os.makedirs(f"csv_files/background")
-        capture = sniff(count=500)
-        wrpcap(f"traces/background/background_trace{i}.pcap", capture)
-        try:
-            with open(f'csv_files/background/background_trace{i}.csv','w') as f:
-                subprocess.run(f"tshark -r traces/background/background_trace{i}.pcap -T fields\
-                -e frame.number -e ip.src -e ip.dst \
-                -E header=y -E separator=/t".split(), stdout =f)
-        except Exception as e:
-            print(f"Iteration: {i}\n error: {e}")
+Function: filter_ips
+Subtracts ips that exist in filter_website from target_website. 
     
-    build_ip_profiles("background")
-    print("done building background profile")
-
-
-'''
-Filters out the ips. subtracts ips that exist in filter_website and target_website. \
-    returns ips left from target_website
+Parameters:
+    target_website - string, name of target website ip profile
+    filter_website - string, name of filter website ip profile
+Returns:
+    profile built in /ip_profiles/{target_website}.csv
+    function returns nothing
+Example usage:
+    build_background_trace_profile("spotify", "google")
+Notes:
+    This overwrites the existing profile for target_website
 '''
 def filter_ips(target_website, filter_website):
-
     if not os.path.exists(f"ip_profiles/{target_website}.csv"):
         print(f"Error in function filter_ips: target website does not exist: ip_profiles/{target_website}.csv")
         return -1
@@ -331,8 +209,8 @@ def filter_ips(target_website, filter_website):
         print(f"Error in function filter_ips: filter website does not exist: ip_profiles/{filter_website}.csv")
         return -1
     
-    target_ips = getIndividualIps(f"ip_profiles/{target_website}.csv")
-    filter_ips = getIndividualIps(f"ip_profiles/{filter_website}.csv")
+    target_ips = get_individual_ips(f"ip_profiles/{target_website}.csv")
+    filter_ips = get_individual_ips(f"ip_profiles/{filter_website}.csv")
 
     filtered_list = []
     for ip in target_ips:
@@ -345,85 +223,127 @@ def filter_ips(target_website, filter_website):
             writer_object.writerow([ip])
     return 0
 
+'''
+Function: build_background_profile
+Builds a profile of background activity.
+    
+Parameters:
+    trace_count - int, number of traces to take
+Returns:
+    profile built in /ip_profiles/background.csv
+    function returns nothing
+Example usage:
+    build_background_profile(20)
+Notes:
+    In future, captures will be end after time passing rather than packet count
+'''
 
-#write a function that counts nnumber of packets its showing up
+def build_background_profile(trace_count):
+    print("Starting to build background profile")
+    
+    # If folders don't exist, then create them.
+    MYDIR = (f"traces/background")
+    if not os.path.isdir(MYDIR):
+        print(f"Folder {MYDIR} does not exist. Creating new....")
+        os.makedirs(MYDIR)
+    MYDIR = (f"csv_files/background")
+    if not os.path.isdir(MYDIR):
+        print(f"Folder {MYDIR} does not exist. Creating new....")
+        os.makedirs(MYDIR)
 
+    for i in range(1, trace_count + 1):
+        capture = sniff(count=500)      #this is where we need time-limited capture
+        wrpcap(f"traces/background/background_trace{i}.pcap", capture)
+        try:
+            with open(f'csv_files/background/background_trace{i}.csv','w') as f:
+                subprocess.run(f"tshark -r traces/background/background_trace{i}.pcap -T fields\
+                -e frame.number -e ip.src -e ip.dst \
+                -E header=y -E separator=/t".split(), stdout =f)
+        except Exception as e:
+            print(f"Iteration: {i}\n error: {e}")
+    
+    build_ip_profiles("background")
+    print("done building background profile")
 
 ##################################################################################################
 # After this section its the usage of the above functions.
 ##################################################################################################
 
-def build_chrome_profile():
+'''
+Function: build_chrome_profile
+Builds a profile for google.com (chrome homepage)
+    
+Parameters:
+    trace_count - int, number of traces to take
+Returns:
+    profile built in /ip_profiles/chrome.csv
+    traces and raw ip data stored in traces and csv folders respectively
+    function returns nothing
+Example usage:
+    build_chrome_profile(20)
+Notes:
+    Requires a background profile: ip_profiles/background.csv 
+'''
+
+def build_chrome_profile(trace_count):
+    if not os.path.exists(f"ip_profiles/background.csv"):
+        print(f"Error in function build_chrome_profile: \n No background profile exists. Use build_background_profile first")
+        return -1
     print("Starting to build chrome profile")
-    build_background_trace_profile()
-    for i in range(10):
-        sniff_website(i, 0, "chrome")
+    sniff_website(trace_count, 0, "chrome")
     build_ip_profiles("chrome")
     if filter_ips("chrome", "background") != 0:
         print("Failed in making chrome profile")
     print("Done with chrome profile")
 
+'''
+Function: build_profile_without_noise
+Builds a profile for a given website with chrome and background profiles filtered out
+    
+Parameters:
+    trace_count - int, number of traces to take
+    website - string, full web address (i.e. "https://youtube.com")
+    name - string, name for data stored in ip_profiles, traces, csv_files
+Returns:
+    profile built in /ip_profiles/{name}.csv
+    traces and raw ip data stored in traces and csv_files folders respectively
+    function returns nothing
+Example usage:
+    build_profile_without_noise(20, "https://youtube.com", "youtube")
+Notes:
+    Requires a background profile: ip_profiles/background.csv 
+    Requires a chrome profile: ip_profiles/chrome.csv 
+'''
 
+def build_profile_without_noise(trace_count, website, name):
+    err_msg = ""
+    if not os.path.exists(f"ip_profiles/background.csv"):
+        err_msg = f"{err_msg} No background profile exists. Use build_background_profile first \n"    
+    if not os.path.exists(f"ip_profiles/background.csv"):
+        err_msg = f"{err_msg} No chrome profile exists. Use build_chrome_profile first \n"
+    if err_msg != "":
+        print(f"Error(s) in function build_chrome_profile: \n{err_msg}")
+        return -1
 
-def build_profile_without_noise(website, name):
     print(f"Starting to build {name}")
-    # build_chrome_profile() # Maybe we shouldn't call this too many times. 
-    for i in range(50):
-        sniff_website(i, website, name)
+    sniff_website(trace_count, website, name)
     build_ip_profiles(name)
     filter_ips(name,"background")
     filter_ips(name,"chrome")
     print(f"Done with building {name}")
     
 
-    
-def check_website_in_noisy_trace(file, name):
-    if not os.path.exists(f"ip_profiles/{name}.csv"):
-        print(f"Error in function check_website_in_noisy_trace, file ip_profiles/{name} does not exist")
-    else:
-        try:
-            website_ip_list = getIndividualIps(f"ip_profiles/{name}.csv")
-            with open(f'csv_files/compare_file.csv','w') as f:
-                subprocess.run(f"tshark -r {file} -T fields\
-                -e frame.number -e ip.src -e ip.dst \
-                -E header=y -E separator=/t".split(), stdout =f)
-            src_ip, dst_ip = getIps(f"csv_files/compare_file.csv")
-            return_list = []
-
-            for ip in src_ip:
-                if ip in website_ip_list and ip not in return_list:
-                    return_list.append(ip)
-            for ip in dst_ip:
-                if ip in website_ip_list and ip not in return_list:
-                    return_list.append(ip)
-            if not return_list:
-                return 1, return_list
-            return 0, return_list
-        except Exception as e:
-            print(f"Error in check_website_in_noisy_trace error: {e}")
-
-
 
 '''
 Usages of the functions above.
 '''
 def main():
-    install_chromdriver() # MUST CALL
-    # possible_websites = ["https://google.com", "https://youtube.com","https://www.reddit.com/",\
-    #      "https://www.carleton.edu/", "https://www.gmail.com", "https://www.github.com", \
-    #         "https://www.discord.com","https://www.gradescope.com", "https://www.linkedin.com"]
-    # n = 3
-    # for i in range(100):
-    #     # sniff_website(i, "www.google.com", "google")
-    #     # get_noisy_trace_spotify(i, possible_websites, n)
-    #     pass
+    install_chromedriver()
+    build_background_profile(2)
+    build_chrome_profile(5)
+    build_profile_without_noise(5, "https://youtube.com", "youtube")
+ 
 
-    # build_chrome_profile()
-    # build_profile_without_noise("https://www.spotify.com", "spotify")
-    # build_ip_profiles("google")
-    # sniff_website(1, "www.google.com", "google")
-
-    print(check_website_in_noisy_trace("./traces/spotify/luke.pcapng", "spotify"))
 main()
 
     
