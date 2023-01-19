@@ -11,8 +11,8 @@ Required packages:
         Chrome driver version 106
     scapy - take the wireshark traces: documentation https://scapy.readthedocs.io/en/latest/usage.html
 
-Developed by: Aiden Chang
-Last Updated: 1/11/2022 at 10:00 PM by Anders Shenholm
+Developed by: Aiden Chang, Anders Shenholm
+Last Updated: 1/19/2022 at 12:00 PM by Anders Shenholm
 Please contact Aiden Chang for questions
 
 '''
@@ -42,14 +42,16 @@ def install_chromedriver():
         chromedriver_autoinstaller.install()
         return 0
     except Exception as e:
-        print(f"Failed to download chromdriver with exception: {e}")
+        print(f"Failed to download chromedriver with exception: {e}")
         return -1
 
 
 '''
-Reads a csv file and returns two dictionaries. 
+Reads a csv file and returns four dictionaries. 
 source_ip - a dic with unique ip's of the source and the count of each ip
 dest_ip - a dic with unique ip's of the destination and the count of each ip
+ipv6_source_ip - a dic with unique ipv6's of the source and the count of each ip
+ipv6_dest_ip - a dic with unique ipv6's of the destination and the count of each ip
 '''
 def get_ips(filename):
     try:
@@ -58,6 +60,8 @@ def get_ips(filename):
             next(spamreader)
             source_ip = {}
             dest_ip = {}
+            ipv6_source_ip = {}
+            ipv6_dest_ip = {}
             for row in spamreader:
                 if row[1] not in source_ip:
                     source_ip[row[1]] = 1
@@ -67,7 +71,15 @@ def get_ips(filename):
                     dest_ip[row[2]] = 1
                 else:
                     dest_ip[row[2]] += 1
-            return source_ip, dest_ip
+                if row[3] not in ipv6_source_ip:
+                    ipv6_source_ip[row[3]] = 1
+                else:
+                    ipv6_source_ip[row[3]] += 1
+                if row[4] not in ipv6_dest_ip:
+                    ipv6_dest_ip[row[4]] = 1
+                else:
+                    ipv6_dest_ip[row[4]] += 1
+            return source_ip, dest_ip, ipv6_source_ip, ipv6_dest_ip
     except Exception as e:
         print(f"Error in function get_ips: {e}")
 
@@ -127,9 +139,8 @@ def sniff_website(trace_count, website, name, packet_count = 1000):
         browser.quit()
         try:
             with open(f'csv_files/{name}/{name}_trace{i}.csv','w') as f:
-                subprocess.run(f"tshark -r traces/{name}/{name}_trace{i}.pcap -T fields\
-                -e frame.number -e ip.src -e ip.dst \
-                -E header=y -E separator=/t".split(), stdout =f)
+                subprocess.run(f"tshark -r traces/{name}/{name}_trace{i}.pcap \
+                    -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split(), stdout =f)
         except Exception as e:
             print(f"Iteration in sniff_website: {i}\n error: {e}")
 
@@ -169,16 +180,23 @@ def build_ip_profiles(website):
 
         csv_files = glob(f"{folder}/*")
         for file in csv_files:
-            src_ip, dst_ip = get_ips(file)
-
+            src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(file)
             for key in src_ip:
                 if key and key not in ip_sets:
                     new_ips.append(key)
                     ip_sets.append(key)
-            for key2 in dst_ip:
-                if key2 and key2 not in ip_sets:
-                    new_ips.append(key2)
-                    ip_sets.append(key2)
+            for key in dst_ip:
+                if key and key not in ip_sets:
+                    new_ips.append(key)
+                    ip_sets.append(key)
+            for key in ipv6_src_ip:
+                if key and key not in ip_sets:
+                    new_ips.append(key)
+                    ip_sets.append(key)
+            for key in ipv6_dst_ip:
+                if key and key not in ip_sets:
+                    new_ips.append(key)
+                    ip_sets.append(key)
                     
         with open(write_path, write_type) as csv_writer:
             writer_object = csv.writer(csv_writer)
@@ -228,17 +246,17 @@ Function: build_background_profile
 Builds a profile of background activity.
     
 Parameters:
-    trace_count - int, number of traces to take
+    time_limit - int, number of seconds to take trace
 Returns:
     profile built in /ip_profiles/background.csv
     function returns nothing
 Example usage:
-    build_background_profile(20)
+    build_background_profile(30)
 Notes:
-    In future, captures will be end after time passing rather than packet count
+
 '''
 
-def build_background_profile(trace_count):
+def build_background_profile(time_limit):
     print("Starting to build background profile")
     
     # If folders don't exist, then create them.
@@ -251,16 +269,14 @@ def build_background_profile(trace_count):
         print(f"Folder {MYDIR} does not exist. Creating new....")
         os.makedirs(MYDIR)
 
-    for i in range(1, trace_count + 1):
-        capture = sniff(count=500)      #this is where we need time-limited capture
-        wrpcap(f"traces/background/background_trace{i}.pcap", capture)
-        try:
-            with open(f'csv_files/background/background_trace{i}.csv','w') as f:
-                subprocess.run(f"tshark -r traces/background/background_trace{i}.pcap -T fields\
-                -e frame.number -e ip.src -e ip.dst \
-                -E header=y -E separator=/t".split(), stdout =f)
-        except Exception as e:
-            print(f"Iteration: {i}\n error: {e}")
+    capture = sniff(count=500000, timeout=time_limit)      
+    wrpcap(f"traces/background/background_trace1.pcap", capture)
+    try:
+        with open(f'csv_files/background/background_trace1.csv','w') as f:
+            subprocess.run(f"tshark -r traces/background/background_trace1.pcap \
+                -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split(), stdout =f)
+    except Exception as e:
+        print(f"Background trace error: {e}")
     
     build_ip_profiles("background")
     print("done building background profile")
@@ -339,10 +355,9 @@ Usages of the functions above.
 '''
 def main():
     install_chromedriver()
-    build_background_profile(2)
-    build_chrome_profile(5)
-    build_profile_without_noise(5, "https://youtube.com", "youtube")
- 
+    build_background_profile(30)
+    build_chrome_profile(2)
+    build_profile_without_noise(2, "https://youtube.com", "youtube")
 
 main()
 
