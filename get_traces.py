@@ -32,6 +32,9 @@ import csv
 import sys
 import datetime
 
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 '''
 Installs chromedriver
 Required for any Selenium Chrome activity
@@ -132,12 +135,12 @@ def sniff_website(trace_count, website, name, packet_count = 1000):
 
     for i in range(1, trace_count + 1):
         browser = webdriver.Chrome()
-        if website != 0:
+        if website != 0: #shaun: why this check?
             browser.get(website)
         capture = sniff(packet_count)
         wrpcap(f"traces/{name}/{name}_trace{i}.pcap", capture)
         browser.quit()
-        try:
+        try: #shaun: what's going on here?
             with open(f'csv_files/{name}/{name}_trace{i}.csv','w') as f:
                 subprocess.run(f"tshark -r traces/{name}/{name}_trace{i}.pcap \
                     -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split(), stdout =f)
