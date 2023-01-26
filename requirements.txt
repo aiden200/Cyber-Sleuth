@@ -28,5 +28,6 @@ wsproto==1.2.0
 jupyter==1.0.0
 plotly==5.13.0
 chart_studio
-cufflinks
-seaborn
+cufflinks==0.17.3
+seaborn #Shaun: probably delete
+kaleido==0.2.1

@@ -10,8 +10,10 @@ WARNING:
 
 import tkinter as tk                # python 3
 from tkinter import font as tkfont  # python 3
-from tkinter.filedialog import askopenfile # python 3
+from tkinter import filedialog # python 3
 from scapy.all import *
+import os
+import shutil
 
 
 class SampleApp(tk.Tk):
@@ -33,7 +35,7 @@ class SampleApp(tk.Tk):
 
 
         self.frames = {}
-        for F in (StartPage, InstructionsPage, BackgroundPage, ProfilePage, AboutPage):
+        for F in (StartPage, InstructionsPage, BackgroundPage, ProfilePage, UploadTracePage, AboutPage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -44,21 +46,8 @@ class SampleApp(tk.Tk):
         
         self.show_frame("StartPage")
 
-#seperate frame setup for UploadTracePage to include
-#function for openening pcap files
-        for F in (StartPage, UploadTracePage):
-            page_name = F.__name__
-            frame = F(parent=container, controller=self)
-            self.frames[page_name] = frame
-            # put all of the pages in the same location;
-            # the one on the top of the stacking order
-            # will be the one that is visible.
-            frame.grid(row=0, column=0, sticky="nsew")
+
         
-        self.show_frame("StartPage")
-            
-
-
     def show_frame(self, page_name):
         '''Show a frame for the given page name'''
         frame = self.frames[page_name]
@@ -138,19 +127,46 @@ class ProfilePage(tk.Frame):
         button.pack(anchor="s", side="left")
 
 
+#User uploads pcap and pcapng files to UploadTraces Page
+def UploadPcap(pkt=None):
+        filename = filedialog.askopenfilename(title="Choose a File...", filetypes=(('Pcap Files', '.pcap .pcapng' ),))
+    #get file pathway
+        file = open(str(filename), 'rb')
+        print(str(file))
+        translate = str(file)
+        id1 = translate.index("=")
+        id2 = translate.index("'>")
+        path = ''
+        for i in range(id1 + len("=") + 1, id2):
+            path = path + translate[i]
+    #open new directory for uploaded traces``
+        if filename:
+            NEWDIR = (f"Uploaded Traces")
+            if not os.path.isdir(NEWDIR):
+                os.makedirs(NEWDIR)
+#copies file from user's directory into Uploaded Traces folder
+        with open(f"Uploaded Traces/{os.path.basename(str(filename))}",'w') as f:
+            shutil.copy(path, NEWDIR)
+        file_label = tk.Label(text=str(os.path.basename(str(filename))))
+        file_label.place(relx = 0.5, rely = 0.5, anchor ='center')
+
+
+
+
 class UploadTracePage(tk.Frame):
-  
+            
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         label = tk.Label(self, text="Upload Trace Here!", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
-        upload_instructions = tk.Button(self, text="Choose a File...", command=lambda: controller.show_frame("StartPage"))
-        upload_instructions.pack()
-        button = tk.Button(self, text="Back to Start Page",
+        upload_button = tk.Button(self, text="Choose a File...", command=lambda:UploadPcap())
+        upload_button.pack()
+        back_button = tk.Button(self, text="Back to Start Page",
             highlightbackground='grey', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
-        button.pack(anchor="s", side="left")
+        back_button.pack(anchor="s", side="left")
+
 
 
 

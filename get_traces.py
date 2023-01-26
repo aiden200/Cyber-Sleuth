@@ -36,6 +36,7 @@ import pandas as pd
 
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
+from shutil import rmtree
 
 '''
 Installs chromedriver
@@ -268,11 +269,14 @@ def filter_ips(target_website, filter_website):
     for ip in target_ips:
         if ip not in filter_ips:
             filtered_list.append(ip)
-    
-    with open(f"ip_profiles/{target_website}.csv", "w") as csv_writer:
-        writer_object = csv.writer(csv_writer)
-        for ip in filtered_list:
-            writer_object.writerow([ip])
+
+    with open(f"ip_profiles/{target_website}.csv", "r") as inp, open(f"ip_profiles/{target_website}_temp.csv", "w") as out:
+        writer = csv.writer(out)
+        for row in csv.reader(inp):
+            if row[0] in filtered_list:
+                writer.writerow(row)
+    os.remove(f"ip_profiles/{target_website}.csv")
+    os.rename(f"ip_profiles/{target_website}_temp.csv", f"ip_profiles/{target_website}.csv")
     return 0
 
 '''
@@ -382,19 +386,89 @@ def build_profile_without_noise(trace_count, website, name):
     filter_ips(name,"chrome")
     print(f"Done with building {name}")
     
+'''
+Function: reset_folders
+empties dynamic folders, currently: traces, csv_files, ip_profiles
+
+Parameters:
+    none
+Returns:
+    deletes any existing content in folders MYDIRS
+    function returns nothing
+Example usage:
+    reset_folders()
+Notes:
+    uses shutil.rmtree
+    Potential change: take a specific list of websites to reset for
+
+'''
+def reset_folders():
+    MYDIRS = ["traces", "csv_files", "ip_profiles"]
+    for dir in MYDIRS:
+        try:
+            rmtree(dir)
+            os.mkdir(dir)
+        except Exception as e:
+            print(f"Failed to reset {dir}. Reason: {e}")
 
 
 '''
-Usages of the functions above.
+Function: build_frequency_ip_profile
+Builds a csv file including all unique ip addresses found in a filtered website trace as well as their frequency across traces
+    
+Parameters:
+    website - str, the website we are profiling. This must be identical to the folder scanning. (ex: "google")
+Returns:
+    profile built in /ip_profiles/{website}.csv
+    function returns nothing
+Example usage:
+    build_ip_profiles("google")
+Notes:
+    Currently built to delete old profile and rewrite it
 '''
+def build_frequency_ip_profile(website):
+    if website not in os.listdir("csv_files"):
+        print(f"Error in build ip profile: no csv file trace(s) for website {website}")
+        quit()
+
+    total_occurances = {}       # frequency of occurances across files
+    trace_files = os.listdir(f"csv_files/{website}")
+    PROFILE_PATH = (f"ip_profiles/{website}.csv")
+    trace_count = 0
+    for file in trace_files:
+        local_occurances = {}   # occurances within each file
+        src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(f"csv_files/{website}/{file}")
+        for key in src_ip: local_occurances[key] = 1
+        for key in dst_ip: local_occurances[key] = 1
+        for key in ipv6_src_ip: local_occurances[key] = 1
+        for key in ipv6_dst_ip: local_occurances[key] = 1
+
+        for key in local_occurances:
+            if key in total_occurances:
+                total_occurances[key] += 1
+            else:
+                total_occurances[key] = 1
+
+        trace_count += 1
+
+    total_occurances = dict(sorted(total_occurances.items(), key=lambda x: x[1], reverse=True))
+    for key in total_occurances:
+        total_occurances[key] = (f"{total_occurances[key]/trace_count:.2f}")
+
+    if os.path.exists(PROFILE_PATH):
+        os.remove(PROFILE_PATH)
+    with open(PROFILE_PATH, "w") as profile:
+        writer = csv.writer(profile)
+        for key in total_occurances:
+            writer.writerow([key, total_occurances[key]])
+
+
+
 def main():
-    # install_chromedriver()
-    # build_background_profile(30)
-    # build_chrome_profile(2)
-    # build_profile_without_noise(2, "https://youtube.com", "youtube")
-    # create_profile_files_with_frequencies()
-    # initialize_frequencies()
-
+    install_chromedriver()
+    build_background_profile(30)
+    build_chrome_profile(2)
+    build_profile_without_noise(2, "https://youtube.com", "youtube")
 
 main()
 
