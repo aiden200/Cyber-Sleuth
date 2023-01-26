@@ -54,7 +54,7 @@ dest_ip - a dic with unique ip's of the destination and the count of each ip
 ipv6_source_ip - a dic with unique ipv6's of the source and the count of each ip
 ipv6_dest_ip - a dic with unique ipv6's of the destination and the count of each ip
 '''
-def get_ips(filename):
+def get_trace_ips(filename):
     try:
         with open(filename, newline='') as csvfile:
             spamreader = csv.reader(csvfile, delimiter='\t', quotechar='|')
@@ -82,13 +82,13 @@ def get_ips(filename):
                     ipv6_dest_ip[row[4]] += 1
             return source_ip, dest_ip, ipv6_source_ip, ipv6_dest_ip
     except Exception as e:
-        print(f"Error in function get_ips: {e}")
+        print(f"Error in function get_trace_ips: {e}")
 
 
 '''
 Reads a csv file and returns a list of unique ips
 '''
-def get_individual_ips(filename):
+def get_profile_ips(filename):
     return_list = []
     try:
         with open(filename, newline='') as csvfile:
@@ -98,7 +98,7 @@ def get_individual_ips(filename):
                     return_list.append(row[0])
         return return_list
     except Exception as e:
-        print(f"Error in function get_individual_ips: {e}")
+        print(f"Error in function get_profile_ips: {e}")
 
 
 '''
@@ -177,11 +177,11 @@ def build_ip_profiles(website):
         write_path = f"./ip_profiles/{website}.csv"
         if os.path.exists(write_path):
             write_type = "a"
-            ip_sets = get_individual_ips(write_path)
+            ip_sets = get_profile_ips(write_path)
 
         csv_files = glob(f"{folder}/*")
         for file in csv_files:
-            src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(file)
+            src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_trace_ips(file)
             for key in src_ip:
                 if key and key not in ip_sets:
                     new_ips.append(key)
@@ -228,8 +228,8 @@ def filter_ips(target_website, filter_website):
         print(f"Error in function filter_ips: filter website does not exist: ip_profiles/{filter_website}.csv")
         return -1
     
-    target_ips = get_individual_ips(f"ip_profiles/{target_website}.csv")
-    filter_ips = get_individual_ips(f"ip_profiles/{filter_website}.csv")
+    target_ips = get_profile_ips(f"ip_profiles/{target_website}.csv")
+    filter_ips = get_profile_ips(f"ip_profiles/{filter_website}.csv")
 
     filtered_list = []
     #if we are filtering against the background or chrome compare to 24 bit ips
@@ -427,7 +427,7 @@ def build_frequency_ip_profile(website):
     trace_count = 0
     for file in trace_files:
         local_occurances = {}   # occurances within each file
-        src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(f"csv_files/{website}/{file}")
+        src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_trace_ips(f"csv_files/{website}/{file}")
         for key in src_ip: local_occurances[key] = 1
         for key in dst_ip: local_occurances[key] = 1
         for key in ipv6_src_ip: local_occurances[key] = 1
@@ -459,10 +459,12 @@ def main():
     #filter_ips("chrome", "background")
     #build_background_profile(300)
     #build_chrome_profile(2)
-    sniff_website(2, "https://chess.com", "chess", 5000)
-    build_frequency_ip_profile("chess")
-    filter_ips("chess", "background")
-    filter_ips("chess", "chrome")
+    print(get_profile_ips("ip_profiles/espn.csv"))
+    #print(get_profile_ips("ip_profiles/chrome.csv"))
+    # sniff_website(2, "https://chess.com", "chess", 5000)
+    # build_frequency_ip_profile("chess")
+    # filter_ips("chess", "background")
+    # filter_ips("chess", "chrome")
     
 
 
