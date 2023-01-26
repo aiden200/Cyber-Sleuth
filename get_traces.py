@@ -232,9 +232,33 @@ def filter_ips(target_website, filter_website):
     filter_ips = get_individual_ips(f"ip_profiles/{filter_website}.csv")
 
     filtered_list = []
-    for ip in target_ips:
-        if ip not in filter_ips:
-            filtered_list.append(ip)
+    #if we are filtering against the background or chrome compare to 24 bit ips
+    if filter_website in ["background", "chrome"]:
+        #create list of 24 bit ip addresses
+        filter_ips_24 = []
+        for ip in filter_ips:
+            if ":" not in ip:
+                new_filter_ip = ip.split(".")
+                # print('new filter IP')
+                # print(ip)
+                # print()
+                new_filter_ip_24 = new_filter_ip[0] + "." + new_filter_ip[1] + "." + new_filter_ip[2]
+                filter_ips_24.append(new_filter_ip_24)
+
+        #check the first 24 bits of target ips against the filter ips
+        for ip in target_ips:
+            if ":" not in ip and ip != "":
+                new_target_ip = ip.split(".")
+                # print('new target IP')
+                # print(ip)
+                # print()
+                new_target_ip_24 = new_target_ip[0] + "." + new_target_ip[1] + "." + new_target_ip[2]
+                if new_target_ip_24 not in filter_ips_24:
+                    filtered_list.append(ip) #add the entire 32 bit ip
+    else:
+        for ip in target_ips:
+            if ip not in filter_ips:
+                filtered_list.append(ip)
 
     with open(f"ip_profiles/{target_website}.csv", "r") as inp, open(f"ip_profiles/{target_website}_temp.csv", "w") as out:
         writer = csv.writer(out)
@@ -310,7 +334,7 @@ def build_chrome_profile(trace_count):
         print(f"Error in function build_chrome_profile: \n No background profile exists. Use build_background_profile first")
         return -1
     print("Starting to build chrome profile")
-    sniff_website(trace_count, 0, "chrome")
+    sniff_website(trace_count, "https://www.google.com", "chrome", 5000)
     build_ip_profiles("chrome")
     if filter_ips("chrome", "background") != 0:
         print("Failed in making chrome profile")
@@ -432,10 +456,14 @@ def build_frequency_ip_profile(website):
 
 def main():
     install_chromedriver()
-    build_background_profile(30)
-    build_chrome_profile(2)
-    sniff_website(20, "https://spotify.com", "spotify")
-    build_frequency_ip_profile("spotify")
+    #filter_ips("chrome", "background")
+    #build_background_profile(300)
+    #build_chrome_profile(2)
+    sniff_website(2, "https://chess.com", "chess", 5000)
+    build_frequency_ip_profile("chess")
+    filter_ips("chess", "background")
+    filter_ips("chess", "chrome")
+    
 
 
 main()
