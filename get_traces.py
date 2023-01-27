@@ -88,14 +88,17 @@ def get_trace_ips(filename):
 '''
 Reads a csv file and returns a list of unique ips
 '''
-def get_profile_ips(filename):
+def get_profile_ips(filename, frequency = False):
     return_list = []
     try:
         with open(filename, newline='') as csvfile:
             spamreader = csv.reader(csvfile)
             for row in spamreader:
                 if row[0] not in return_list:
-                    return_list.append(row[0])
+                    if frequency:
+                        return_list.append([row[0], row[1]])
+                    else:
+                        return_list.append(row[0])
         return return_list
     except Exception as e:
         print(f"Error in function get_profile_ips: {e}")
@@ -309,6 +312,98 @@ def build_background_profile(time_limit):
     build_ip_profiles("background")
     print("done building background profile")
 
+
+
+'''
+Function: check_website_in_noisy_trace
+compares an uploaded trace to a built IP profile
+
+Parameters:
+    file - a file uploaded by the user to be compared to a profile
+    name - the name of the profile to be compared to
+Returns:
+    two lists, one with matches for 32 bit IPs and one with matches for 24 bit IPs
+Example usage:
+    check_website_in_noisy_trace("noisy_trace", "spotify")
+Notes:
+    returns (-1, -1) when it encounters an error
+    only written for IPV4 right now
+'''
+def check_website_in_noisy_trace(file, name):
+    if not os.path.exists(f"ip_profiles/{name}.csv"):
+        print(f"Error in function check_website_in_noisy_trace, file ip_profiles/{name} does not exist")
+    else:
+        try:
+            profile_ip_list = get_profile_ips(f"ip_profiles/{name}.csv", frequency = True)
+            profile_ip_list_24 = []
+            for ip in profile_ip_list:
+                if ":" not in ip and ip != "":
+                    ip_split = ip[0].split(".")
+                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
+                    profile_ip_list_24.append([ip_24, ip[1]])
+
+            with open(f'csv_files/compare_file.csv','w') as f:
+                subprocess.run(f"tshark -r {file} \
+                -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split(), stdout =f)
+        
+            src_ip, dst_ip = get_trace_ips(f"csv_files/compare_file.csv")[0], get_trace_ips(f"csv_files/compare_file.csv")[1]
+
+            return_list_32 = []
+            return_list_24 = []
+
+
+            for ip in src_ip:
+                if ":" not in ip and ip != "":
+                    ip_split = ip.split(".")
+                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
+
+                for profile_ip in profile_ip_list:
+                    if ip == profile_ip[0]:
+                        in_return_list_32 = False
+                        for return_ip in return_list_32:
+                            if ip == return_ip[0]:
+                                in_return_list_32 = True
+                        if not in_return_list_32:
+                            return_list_32.append(profile_ip)
+
+                for profile_ip_24 in profile_ip_list_24:
+                    if ip_24 == profile_ip_24[0]:
+                        in_return_list_24 = False
+                        for return_ip in return_list_24:
+                            if ip_24 == return_ip[0]:
+                                in_return_list_24 = True
+                        if not in_return_list_24:
+                            return_list_24.append(profile_ip_24)
+                        
+            for ip in dst_ip:
+                if ":" not in ip and ip != "":
+                    ip_split = ip.split(".")
+                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
+
+                for profile_ip in profile_ip_list:
+                    if ip == profile_ip[0]:
+                        in_return_list_32 = False
+                        for return_ip in return_list_32:
+                            if ip == return_ip[0]:
+                                in_return_list_32 = True
+                        if not in_return_list_32:
+                            return_list_32.append(profile_ip)
+
+                for profile_ip_24 in profile_ip_list_24:
+                    if ip_24 == profile_ip_24[0]:
+                        in_return_list_24 = False
+                        for return_ip in return_list_24:
+                            if ip_24 == return_ip[0]:
+                                in_return_list_24 = True
+                        if not in_return_list_24:
+                            return_list_24.append(profile_ip_24)
+            
+            return return_list_32, return_list_24
+
+        except Exception as e:
+            print(f"Error in check_website_in_noisy_trace error: {e}")
+            return -1, -1
+
 ##################################################################################################
 # After this section its the usage of the above functions.
 ##################################################################################################
@@ -459,12 +554,13 @@ def main():
     #filter_ips("chrome", "background")
     #build_background_profile(300)
     #build_chrome_profile(2)
-    print(get_profile_ips("ip_profiles/espn.csv"))
+    #print(get_profile_ips("ip_profiles/espn.csv", True))
     #print(get_profile_ips("ip_profiles/chrome.csv"))
     # sniff_website(2, "https://chess.com", "chess", 5000)
     # build_frequency_ip_profile("chess")
     # filter_ips("chess", "background")
     # filter_ips("chess", "chrome")
+    print(check_website_in_noisy_trace("traces/chess/chess_trace1.pcap", "chess"))
     
 
 

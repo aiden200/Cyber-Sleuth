@@ -14,7 +14,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from scapy.all import *
 from scapy.utils import RawPcapReader
 from glob import glob
-from get_traces import get_ips, get_individual_ips
+from get_traces import get_trace_ips, get_profile_ips
 import chromedriver_autoinstaller
 import random
 import subprocess
@@ -24,31 +24,6 @@ import datetime
 import sys
 import csv
 
-
-def check_website_in_noisy_trace(file, name):
-    if not os.path.exists(f"ip_profiles/{name}.csv"):
-        print(f"Error in function check_website_in_noisy_trace, file ip_profiles/{name} does not exist")
-    else:
-        try:
-            website_ip_list = get_individual_ips(f"ip_profiles/{name}.csv")
-            with open(f'csv_files/compare_file.csv','w') as f:
-                subprocess.run(f"tshark -r {file} -T fields\
-                -e frame.number -e ip.src -e ip.dst \
-                -E header=y -E separator=/t".split(), stdout =f)
-            src_ip, dst_ip = get_ips(f"csv_files/compare_file.csv")
-            return_list = []
-
-            for ip in src_ip:
-                if ip in website_ip_list and ip not in return_list:
-                    return_list.append(ip)
-            for ip in dst_ip:
-                if ip in website_ip_list and ip not in return_list:
-                    return_list.append(ip)
-            if not return_list:
-                return 1, return_list
-            return 0, return_list
-        except Exception as e:
-            print(f"Error in check_website_in_noisy_trace error: {e}")
 
 
 '''
