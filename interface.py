@@ -11,17 +11,18 @@ WARNING:
 import tkinter as tk                # python 3
 from tkinter import font as tkfont  # python 3
 from tkinter import filedialog # python 3
-# from scapy.all import *
 import time
 import os
 import shutil
 import threading
 from urllib.parse import urlparse
+import datetime
 
 
 
 #importing trace functions
 # from get_traces import *
+# from scapy.all import *
 
 PLACEHOLDER = None
 BACKGROUND_BUILT = False
@@ -48,6 +49,9 @@ class SampleApp(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
+        if os.path.exists("./ip_profiles/background.csv"):
+            global BACKGROUND_BUILT
+            BACKGROUND_BUILT = True
 
 
         self.frames = {}
@@ -82,17 +86,17 @@ class StartPage(tk.Frame):
         sub_label = tk.Label(self, text="Please read the instructions to get started!", font=controller.sub_title_font)
         sub_label.pack(side="top", fill="x", pady=10)
 
-        button1 = tk.Button(self, text="Instructions", highlightbackground='grey', height= 3, width=15, padx=10, pady=15,
+        button1 = tk.Button(self, text="Instructions", highlightbackground='black', height= 3, width=15, padx=10, pady=15,
                             command=lambda: controller.show_frame("InstructionsPage"))
-        button2 = tk.Button(self, text="Build Background Profile", highlightbackground='grey', height= 3, width=15 ,padx=10, pady=15,
+        button2 = tk.Button(self, text="Build Background Profile", highlightbackground='black', height= 3, width=15 ,padx=10, pady=15,
                             command=lambda: controller.show_frame("BackgroundPage"))
-        button3 = tk.Button(self, text="Build Profile for a Website",highlightbackground='grey', height= 3, width=15 ,padx=10, pady=15,
+        button3 = tk.Button(self, text="Build Profile for a Website",highlightbackground='black', height= 3, width=15 ,padx=10, pady=15,
                             command=lambda: controller.show_frame("ProfilePage"))
-        button4 = tk.Button(self, text="Upload Your Own Trace", highlightbackground='grey', height=3, width=15 ,padx=10, pady=15,
+        button4 = tk.Button(self, text="Upload Your Own Trace", highlightbackground='black', height=3, width=15 ,padx=10, pady=15,
                             command=lambda: controller.show_frame("UploadTracePage"))
-        button5 = tk.Button(self, text="About", highlightbackground='grey', height= 5, width=10,
+        button5 = tk.Button(self, text="About", highlightbackground='black', height= 5, width=10,
                             command=lambda: controller.show_frame("AboutPage"))
-        button6 = tk.Button(self, text="Quit", highlightbackground='grey', height= 5, width=10, 
+        button6 = tk.Button(self, text="Quit", highlightbackground='black', height= 5, width=10, 
                             command=controller.destroy)
         # button5 = tk.Button(self, text="Exit", command=self.destroy)
         button1.pack()
@@ -112,7 +116,7 @@ class InstructionsPage(tk.Frame):
         label = tk.Label(self, text="Instructions", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
         button = tk.Button(self, text="Back to Start Page",
-            highlightbackground='grey', height= 5, width=12,
+            highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         button.pack(anchor="s", side="left")
 
@@ -124,12 +128,24 @@ class BackgroundPage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
+
+        dt_m = "Not built"
+        if os.path.exists("./ip_profiles/background.csv"):
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime("./ip_profiles/background.csv"))
+        self.last_background_built = tk.Label(self, text=f"Last Background Build: {dt_m}", font="Times 16 bold", fg="dark blue")
+        self.last_background_built.pack(side="top", fill="x", pady=10)
+
+        refresh_button = tk.Button(self, text="refresh",
+            command=lambda:self.refresh())
+        refresh_button.pack(side="top", pady=10)
+
+
         background_button = tk.Button(self, text="Start Background Trace",
-            highlightbackground='grey', height= 5, width=20,
+            highlightbackground='black', height= 5, width=20,
             command=lambda:self.start_background_process(30))
 
         button = tk.Button(self, text="Back to Start Page",
-            highlightbackground='grey', height= 5, width=12,
+            highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         background_button.pack(side="top", pady=10)
         button.pack(anchor="s", side="left")
@@ -152,6 +168,11 @@ class BackgroundPage(tk.Frame):
     def start_background_process(self, timeout : int) -> None:
         newthread = threading.Thread(target=self.build_background_on_thread, args = (timeout,))
         newthread.start()
+    
+    def refresh(self) -> None:
+        if os.path.exists("./ip_profiles/background.csv"):
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime("./ip_profiles/background.csv"))
+            self.last_background_built.config(text = f"Last Background Build: {dt_m}")
         
 
 
@@ -163,6 +184,15 @@ class ProfilePage(tk.Frame):
         label = tk.Label(self, text="Building a Web Profile", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
 
+        dt_m = "Not built"
+        if os.path.exists("./ip_profiles/background.csv"):
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime("./ip_profiles/background.csv"))
+        self.last_background_built = tk.Label(self, text=f"Last Background Build: {dt_m}", font="Times 16 bold", fg="dark blue")
+        self.last_background_built.pack(side="top", fill="x", pady=10)
+
+        refresh_button = tk.Button(self, text="refresh",
+            command=lambda:self.refresh())
+        refresh_button.pack(side="top", pady=10)
 
 
         # TextBox Creation
@@ -186,14 +216,16 @@ class ProfilePage(tk.Frame):
         self.build_background_label.pack(side="top", fill="x", pady=10)
  
     
-        
-
         button = tk.Button(self, text="Back to Start Page",
-            highlightbackground='grey', height= 5, width=12,
+            highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         button.pack(anchor="s", side="left")
+    
+    def refresh(self) -> None:
+        if os.path.exists("./ip_profiles/background.csv"):
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime("./ip_profiles/background.csv"))
+            self.last_background_built.config(text = f"Last Background Build: {dt_m}")
 
-        
 
     def build_website_background(self) -> None:
         inp = self.inputtxt.get(1.0, "end-1c")
@@ -218,32 +250,32 @@ class ProfilePage(tk.Frame):
 
 
 
-#User uploads pcap and pcapng files to UploadTraces Page
-def UploadPcap(self, pkt=None) -> None:
-        filename = filedialog.askopenfilename(title="Choose a File...", filetypes=(('Pcap Files', '.pcap .pcapng' ),))
-    #get file pathway
-        global PLACEHOLDER
-        PLACEHOLDER = filename
-        label = tk.Label(self, text=f"Chosen: {filename}")
-        label.pack(side="top", fill="x", pady=10)
-#         file = open(str(filename), 'rb')
-#         print(str(file))
-#         translate = str(file)
-#         id1 = translate.index("=")
-#         id2 = translate.index("'>")
-#         path = ''
-#         for i in range(id1 + len("=") + 1, id2):
-#             path = path + translate[i]
-#     #open new directory for uploaded traces``
-#         if filename:
-#             NEWDIR = (f"Uploaded Traces")
-#             if not os.path.isdir(NEWDIR):
-#                 os.makedirs(NEWDIR)
-# #copies file from user's directory into Uploaded Traces folder
-#         with open(f"Uploaded Traces/{os.path.basename(str(filename))}",'w') as f:
-#             shutil.copy(path, NEWDIR)
-#         file_label = tk.Label(text=str(os.path.basename(str(filename))))
-#         file_label.place(relx = 0.5, rely = 0.5, anchor ='center')
+# #User uploads pcap and pcapng files to UploadTraces Page
+# def UploadPcap(self, pkt=None) -> None:
+#         filename = filedialog.askopenfilename(title="Choose a File...", filetypes=(('Pcap Files', '.pcap .pcapng' ),))
+#     #get file pathway
+#         global PLACEHOLDER
+#         PLACEHOLDER = filename
+#         label = tk.Label(self, text=f"Chosen: {filename}")
+#         label.pack(side="top", fill="x", pady=10)
+# #         file = open(str(filename), 'rb')
+# #         print(str(file))
+# #         translate = str(file)
+# #         id1 = translate.index("=")
+# #         id2 = translate.index("'>")
+# #         path = ''
+# #         for i in range(id1 + len("=") + 1, id2):
+# #             path = path + translate[i]
+# #     #open new directory for uploaded traces``
+# #         if filename:
+# #             NEWDIR = (f"Uploaded Traces")
+# #             if not os.path.isdir(NEWDIR):
+# #                 os.makedirs(NEWDIR)
+# # #copies file from user's directory into Uploaded Traces folder
+# #         with open(f"Uploaded Traces/{os.path.basename(str(filename))}",'w') as f:
+# #             shutil.copy(path, NEWDIR)
+# #         file_label = tk.Label(text=str(os.path.basename(str(filename))))
+# #         file_label.place(relx = 0.5, rely = 0.5, anchor ='center')
 
 
 
@@ -255,13 +287,20 @@ class UploadTracePage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="Upload Trace Here!", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
-        upload_button = tk.Button(self, text="Choose a File...", command=lambda:UploadPcap(self))
+        upload_button = tk.Button(self, text="Choose a File...", command=lambda:self.UploadPcap())
         upload_button.pack()
         back_button = tk.Button(self, text="Back to Start Page",
-            highlightbackground='grey', height= 5, width=12,
+            highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         back_button.pack(anchor="s", side="left")
 
+    #User uploads pcap and pcapng files to UploadTraces Page
+    def UploadPcap(self, pkt=None) -> None:
+            filename = filedialog.askopenfilename(title="Choose a File...", filetypes=(('Pcap Files', '.pcap .pcapng' ),))
+            global PLACEHOLDER
+            PLACEHOLDER = filename
+            label = tk.Label(self, text=f"Chosen: {filename}")
+            label.pack(side="top", fill="x", pady=10)
 
 
 
@@ -273,7 +312,7 @@ class AboutPage(tk.Frame):
         label = tk.Label(self, text="About This Project", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
         button = tk.Button(self, text="Back to Start Page",
-            highlightbackground='grey', height= 5, width=12,
+            highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         button.pack(anchor="s", side="left")
 
