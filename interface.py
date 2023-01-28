@@ -1,10 +1,23 @@
 '''
 Created by Aiden Chang
 
+GUI pased off of the python tkinter package. Uses functionality from get_traces
+Built for virtual environment. 
+
+To start venv, cd into comps directory and type source bin/activate
+Required packages:
+    All the packages stated in requirements.txt
+
 WARNING:
-    You will need to install tkinter, seprate from your virtual environment
-        for mac: $ brew install python-tk
-        for windows: $ sudo apt-get install python3-tk
+    Some m1 modules will Virtual environments might have issues with tkinter
+
+Developed by: Aiden Chang, Jeylan Jones
+Last Updated: 1/28/2022 at 12:00 PM by Aiden Chang
+Please contact Aiden Chang for questions
+
+To activate GUI, type:
+    $ python3 interface.py
+
 '''
 
 
