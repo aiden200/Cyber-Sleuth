@@ -128,6 +128,9 @@ class BackgroundPage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
+        
+        warning_label = tk.Label(self, text=f"WARNING please close all other apps and bluetooth for the best results", font="Times 20 bold", fg="dark red")
+        warning_label.pack(side="top", fill="x", pady=10)
 
         dt_m = "Not built"
         if os.path.exists("./ip_profiles/background.csv"):
@@ -323,35 +326,3 @@ if __name__ == "__main__":
     app.geometry("800x500")
     app.mainloop()
 
-'''
-pass
-import tkinter as tk
-from tkinter import filedialog
-
-def UploadAction(event=None):
-    filename = filedialog.askopenfilename()
-    print('Selected:', filename)
-
-root = tk.Tk()
-
-#Root is the window, this has to do with the window 
-root.title('Hello Python')
-root.geometry("300x200+10+10")
-
-#Buttons and gagets 
-button = tk.Button(root, text='Open', command=UploadAction)
-button.pack()
-
-
-btn=Button(window, text="This is Button widget", fg='blue')
-btn.place(x=80, y=100)
-# lbl=Label(window, text="This is Label widget", fg='red', font=("Helvetica", 16))
-# lbl.place(x=60, y=50)
-
-# txtfld=Entry(window, text="This is Entry Widget", bd=5)
-# txtfld.place(x=80, y=150)
-
-
-
-root.mainloop()
-'''
