@@ -59,7 +59,7 @@ dest_ip - a dic with unique ip's of the destination and the count of each ip
 ipv6_source_ip - a dic with unique ipv6's of the source and the count of each ip
 ipv6_dest_ip - a dic with unique ipv6's of the destination and the count of each ip
 '''
-def get_ips(filename):
+def get_trace_ips(filename):
     try:
         with open(filename, newline='') as csvfile:
             spamreader = csv.reader(csvfile, delimiter='\t', quotechar='|')
@@ -87,23 +87,26 @@ def get_ips(filename):
                     ipv6_dest_ip[row[4]] += 1
             return source_ip, dest_ip, ipv6_source_ip, ipv6_dest_ip
     except Exception as e:
-        print(f"Error in function get_ips: {e}")
+        print(f"Error in function get_trace_ips: {e}")
 
 
 '''
 Reads a csv file and returns a list of unique ips
 '''
-def get_individual_ips(filename):
+def get_profile_ips(filename, frequency = False):
     return_list = []
     try:
         with open(filename, newline='') as csvfile:
             spamreader = csv.reader(csvfile)
             for row in spamreader:
                 if row[0] not in return_list:
-                    return_list.append(row[0])
+                    if frequency:
+                        return_list.append([row[0], row[1]])
+                    else:
+                        return_list.append(row[0])
         return return_list
     except Exception as e:
-        print(f"Error in function get_individual_ips: {e}")
+        print(f"Error in function get_profile_ips: {e}")
 
 
 '''
@@ -182,10 +185,11 @@ def build_ip_profiles(website):
         write_path = f"./ip_profiles/{website}.csv"
         if os.path.exists(write_path):
             write_type = "a"
-            ip_sets = get_individual_ips(write_path)
+            ip_sets = get_profile_ips(write_path)
 
         csv_files = glob(f"{folder}/*")
         for file in csv_files:
+            src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_trace_ips(file)
             frequency_sum_path = f"./ip_profiles/frequency_sum.csv"
             src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(file)
             with open(frequency_sum_path, write_type) as csv_writer:
@@ -262,13 +266,37 @@ def filter_ips(target_website, filter_website):
         print(f"Error in function filter_ips: filter website does not exist: ip_profiles/{filter_website}.csv")
         return -1
     
-    target_ips = get_individual_ips(f"ip_profiles/{target_website}.csv")
-    filter_ips = get_individual_ips(f"ip_profiles/{filter_website}.csv")
+    target_ips = get_profile_ips(f"ip_profiles/{target_website}.csv")
+    filter_ips = get_profile_ips(f"ip_profiles/{filter_website}.csv")
 
     filtered_list = []
-    for ip in target_ips:
-        if ip not in filter_ips:
-            filtered_list.append(ip)
+    #if we are filtering against the background or chrome compare to 24 bit ips
+    if filter_website in ["background", "chrome"]:
+        #create list of 24 bit ip addresses
+        filter_ips_24 = []
+        for ip in filter_ips:
+            if ":" not in ip:
+                new_filter_ip = ip.split(".")
+                # print('new filter IP')
+                # print(ip)
+                # print()
+                new_filter_ip_24 = new_filter_ip[0] + "." + new_filter_ip[1] + "." + new_filter_ip[2]
+                filter_ips_24.append(new_filter_ip_24)
+
+        #check the first 24 bits of target ips against the filter ips
+        for ip in target_ips:
+            if ":" not in ip and ip != "":
+                new_target_ip = ip.split(".")
+                # print('new target IP')
+                # print(ip)
+                # print()
+                new_target_ip_24 = new_target_ip[0] + "." + new_target_ip[1] + "." + new_target_ip[2]
+                if new_target_ip_24 not in filter_ips_24:
+                    filtered_list.append(ip) #add the entire 32 bit ip
+    else:
+        for ip in target_ips:
+            if ip not in filter_ips:
+                filtered_list.append(ip)
 
     with open(f"ip_profiles/{target_website}.csv", "r") as inp, open(f"ip_profiles/{target_website}_temp.csv", "w") as out:
         writer = csv.writer(out)
@@ -319,6 +347,98 @@ def build_background_profile(time_limit):
     build_ip_profiles("background")
     print("done building background profile")
 
+
+
+'''
+Function: check_website_in_noisy_trace
+compares an uploaded trace to a built IP profile
+
+Parameters:
+    file - a file uploaded by the user to be compared to a profile
+    name - the name of the profile to be compared to
+Returns:
+    two lists, one with matches for 32 bit IPs and one with matches for 24 bit IPs
+Example usage:
+    check_website_in_noisy_trace("noisy_trace", "spotify")
+Notes:
+    returns (-1, -1) when it encounters an error
+    only written for IPV4 right now
+'''
+def check_website_in_noisy_trace(file, name):
+    if not os.path.exists(f"ip_profiles/{name}.csv"):
+        print(f"Error in function check_website_in_noisy_trace, file ip_profiles/{name} does not exist")
+    else:
+        try:
+            profile_ip_list = get_profile_ips(f"ip_profiles/{name}.csv", frequency = True)
+            profile_ip_list_24 = []
+            for ip in profile_ip_list:
+                if ":" not in ip and ip != "":
+                    ip_split = ip[0].split(".")
+                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
+                    profile_ip_list_24.append([ip_24, ip[1]])
+
+            with open(f'csv_files/compare_file.csv','w') as f:
+                subprocess.run(f"tshark -r {file} \
+                -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split(), stdout =f)
+        
+            src_ip, dst_ip = get_trace_ips(f"csv_files/compare_file.csv")[0], get_trace_ips(f"csv_files/compare_file.csv")[1]
+
+            return_list_32 = []
+            return_list_24 = []
+
+
+            for ip in src_ip:
+                if ":" not in ip and ip != "":
+                    ip_split = ip.split(".")
+                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
+
+                for profile_ip in profile_ip_list:
+                    if ip == profile_ip[0]:
+                        in_return_list_32 = False
+                        for return_ip in return_list_32:
+                            if ip == return_ip[0]:
+                                in_return_list_32 = True
+                        if not in_return_list_32:
+                            return_list_32.append(profile_ip)
+
+                for profile_ip_24 in profile_ip_list_24:
+                    if ip_24 == profile_ip_24[0]:
+                        in_return_list_24 = False
+                        for return_ip in return_list_24:
+                            if ip_24 == return_ip[0]:
+                                in_return_list_24 = True
+                        if not in_return_list_24:
+                            return_list_24.append(profile_ip_24)
+                        
+            for ip in dst_ip:
+                if ":" not in ip and ip != "":
+                    ip_split = ip.split(".")
+                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
+
+                for profile_ip in profile_ip_list:
+                    if ip == profile_ip[0]:
+                        in_return_list_32 = False
+                        for return_ip in return_list_32:
+                            if ip == return_ip[0]:
+                                in_return_list_32 = True
+                        if not in_return_list_32:
+                            return_list_32.append(profile_ip)
+
+                for profile_ip_24 in profile_ip_list_24:
+                    if ip_24 == profile_ip_24[0]:
+                        in_return_list_24 = False
+                        for return_ip in return_list_24:
+                            if ip_24 == return_ip[0]:
+                                in_return_list_24 = True
+                        if not in_return_list_24:
+                            return_list_24.append(profile_ip_24)
+            
+            return return_list_32, return_list_24
+
+        except Exception as e:
+            print(f"Error in check_website_in_noisy_trace error: {e}")
+            return -1, -1
+
 ##################################################################################################
 # After this section its the usage of the above functions.
 ##################################################################################################
@@ -344,7 +464,7 @@ def build_chrome_profile(trace_count):
         print(f"Error in function build_chrome_profile: \n No background profile exists. Use build_background_profile first")
         return -1
     print("Starting to build chrome profile")
-    sniff_website(trace_count, 0, "chrome")
+    sniff_website(trace_count, "https://www.google.com", "chrome", 5000)
     build_ip_profiles("chrome")
     if filter_ips("chrome", "background") != 0:
         print("Failed in making chrome profile")
@@ -437,7 +557,7 @@ def build_frequency_ip_profile(website):
     trace_count = 0
     for file in trace_files:
         local_occurances = {}   # occurances within each file
-        src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(f"csv_files/{website}/{file}")
+        src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_trace_ips(f"csv_files/{website}/{file}")
         for key in src_ip: local_occurances[key] = 1
         for key in dst_ip: local_occurances[key] = 1
         for key in ipv6_src_ip: local_occurances[key] = 1
@@ -468,7 +588,9 @@ def main():
     install_chromedriver()
     build_background_profile(30)
     build_chrome_profile(2)
-    build_profile_without_noise(2, "https://youtube.com", "youtube")
+    sniff_website(20, "https://spotify.com", "spotify")
+    build_frequency_ip_profile("spotify")
+
 
 main()
 
