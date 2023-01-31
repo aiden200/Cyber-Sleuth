@@ -190,11 +190,11 @@ def build_ip_profiles(website):
         csv_files = glob(f"{folder}/*")
         for file in csv_files:
             src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_trace_ips(file)
-            frequency_sum_path = f"./ip_profiles/frequency_sum.csv"
-            src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(file)
-            with open(frequency_sum_path, write_type) as csv_writer:
-                writer_object = csv.writer(csv_writer)
-                #TODO: figure out how to write to csv where I unpack these dictionaries.
+            # frequency_sum_path = f"./ip_profiles/frequency_sum.csv"
+            # src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(file)
+            # with open(frequency_sum_path, write_type) as csv_writer:
+            #     writer_object = csv.writer(csv_writer)
+            #     #TODO: figure out how to write to csv where I unpack these dictionaries.
             for key in src_ip:
                 if key and key not in ip_sets:
                     new_ips.append(key)
@@ -217,7 +217,7 @@ def build_ip_profiles(website):
             for ip in new_ips:
                 writer_object.writerow([ip])
 
-
+'''
 def create_profile_files_with_frequencies():
     src_dir = 'ip_profiles'
     dest_dir = 'ip_profiles_with_frequencies'
@@ -241,6 +241,7 @@ def update_ip_profile_frequencies():
     # for file in ip_profiles_with_frequencies:
         # for each row in file:
         d[row,1] += src_ip[d[i,0]]
+'''
 
 
 '''
