@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import chart_studio.plotly as py
 import cufflinks as cf
-import seaborn as sns # shaun: delete later because this just gives me datasets to play with
+# import seaborn as sns # shaun: delete later because this just gives me datasets to play with
 import plotly.express as px
 import plotly.graph_objects as go
 # import kaleido

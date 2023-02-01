@@ -31,11 +31,6 @@ import os
 import csv
 import sys
 import datetime
-import shutil
-import pandas as pd
-
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
 from shutil import rmtree
 
 '''
@@ -141,12 +136,12 @@ def sniff_website(trace_count, website, name, packet_count = 1000):
 
     for i in range(1, trace_count + 1):
         browser = webdriver.Chrome()
-        if website != 0: #shaun: why this check?
+        if website != 0:
             browser.get(website)
         capture = sniff(packet_count)
         wrpcap(f"traces/{name}/{name}_trace{i}.pcap", capture)
         browser.quit()
-        try: #shaun: what's going on here?
+        try:
             with open(f'csv_files/{name}/{name}_trace{i}.csv','w') as f:
                 subprocess.run(f"tshark -r traces/{name}/{name}_trace{i}.pcap \
                     -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split(), stdout =f)
@@ -190,11 +185,6 @@ def build_ip_profiles(website):
         csv_files = glob(f"{folder}/*")
         for file in csv_files:
             src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_trace_ips(file)
-            # frequency_sum_path = f"./ip_profiles/frequency_sum.csv"
-            # src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_ips(file)
-            # with open(frequency_sum_path, write_type) as csv_writer:
-            #     writer_object = csv.writer(csv_writer)
-            #     #TODO: figure out how to write to csv where I unpack these dictionaries.
             for key in src_ip:
                 if key and key not in ip_sets:
                     new_ips.append(key)
@@ -216,32 +206,6 @@ def build_ip_profiles(website):
             writer_object = csv.writer(csv_writer)
             for ip in new_ips:
                 writer_object.writerow([ip])
-
-'''
-def create_profile_files_with_frequencies():
-    src_dir = 'ip_profiles'
-    dest_dir = 'ip_profiles_with_frequencies'
-    files = os.listdir(src_dir)
-    shutil.copytree(src_dir, dest_dir)
-
-def initialize_frequencies():
-    csv_profile_with_frequencies_list = glob("ip_profiles_with_frequencies/*")
-    for csv_file in csv_profile_with_frequencies_list:
-        df = pd.read_csv(csv_file)
-        df["frequency"] = 0
-        df.columns = ["ip_address", "frequency"]
-        df.to_csv(csv_file, index=False)
-
-
-def create_master_csv_of_frequencies():
-
-
-
-def update_ip_profile_frequencies():
-    # for file in ip_profiles_with_frequencies:
-        # for each row in file:
-        d[row,1] += src_ip[d[i,0]]
-'''
 
 
 '''
@@ -587,10 +551,17 @@ def build_frequency_ip_profile(website):
 
 def main():
     install_chromedriver()
-    build_background_profile(30)
-    build_chrome_profile(2)
-    sniff_website(20, "https://spotify.com", "spotify")
-    build_frequency_ip_profile("spotify")
+    # filter_ips("chrome", "background")
+    # build_background_profile(300)
+    # build_chrome_profile(2)
+    # print(get_profile_ips("ip_profiles/espn.csv", True))
+    # print(get_profile_ips("ip_profiles/chrome.csv"))
+    # sniff_website(2, "https://chess.com", "chess", 5000)
+    # build_frequency_ip_profile("chess")
+    # filter_ips("chess", "background")
+    # filter_ips("chess", "chrome")
+    print(check_website_in_noisy_trace("traces/chess/chess_trace1.pcap", "chess"))
+    
 
 
 main()
