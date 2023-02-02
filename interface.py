@@ -33,10 +33,13 @@ import datetime
 
 
 
+
+
 #importing trace functions
 # from get_traces import *
 # from scapy.all import *
 
+current_path = os.path.dirname(os.path.abspath(__file__))
 PLACEHOLDER = None
 BACKGROUND_BUILT = False
 
@@ -62,13 +65,13 @@ class SampleApp(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        if os.path.exists("./ip_profiles/background.csv"):
+        if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
             global BACKGROUND_BUILT
             BACKGROUND_BUILT = True
 
 
         self.frames = {}
-        for F in (StartPage, InstructionsPage, BackgroundPage, ProfilePage, UploadTracePage, AboutPage):
+        for F in (StartPage, InstructionsPage, BackgroundPage, ProfilePage, UploadTracePage, AboutPage, BuiltProfilePage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -99,14 +102,16 @@ class StartPage(tk.Frame):
         sub_label = tk.Label(self, text="Please read the instructions to get started!", font=controller.sub_title_font)
         sub_label.pack(side="top", fill="x", pady=10)
 
-        button1 = tk.Button(self, text="Instructions", highlightbackground='black', height= 3, width=15, padx=10, pady=15,
+        button1 = tk.Button(self, text="Instructions", highlightbackground='black', height= 2, width=15, padx=10, pady=10,
                             command=lambda: controller.show_frame("InstructionsPage"))
-        button2 = tk.Button(self, text="Build Background Profile", highlightbackground='black', height= 3, width=15 ,padx=10, pady=15,
+        button2 = tk.Button(self, text="Build Background Profile", highlightbackground='black', height= 2, width=15 ,padx=10, pady=10,
                             command=lambda: controller.show_frame("BackgroundPage"))
-        button3 = tk.Button(self, text="Build Profile for a Website",highlightbackground='black', height= 3, width=15 ,padx=10, pady=15,
+        button3 = tk.Button(self, text="Build Profile for a Website",highlightbackground='black', height= 2, width=15 ,padx=10, pady=10,
                             command=lambda: controller.show_frame("ProfilePage"))
-        button4 = tk.Button(self, text="Upload Your Own Trace", highlightbackground='black', height=3, width=15 ,padx=10, pady=15,
+        button4 = tk.Button(self, text="Upload Your Own Trace", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
                             command=lambda: controller.show_frame("UploadTracePage"))
+        button7 = tk.Button(self, text="Check Built Profiles", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
+                            command=lambda: controller.show_frame("BuiltProfilePage"))
         button5 = tk.Button(self, text="About", highlightbackground='black', height= 5, width=10,
                             command=lambda: controller.show_frame("AboutPage"))
         button6 = tk.Button(self, text="Quit", highlightbackground='black', height= 5, width=10, 
@@ -116,6 +121,7 @@ class StartPage(tk.Frame):
         button2.pack()
         button3.pack()
         button4.pack()
+        button7.pack()
         button5.pack(anchor="s", side="right")
         button6.pack(anchor="s", side="left")
         
@@ -146,8 +152,8 @@ class BackgroundPage(tk.Frame):
         warning_label.pack(side="top", fill="x", pady=10)
 
         dt_m = "Not built"
-        if os.path.exists("./ip_profiles/background.csv"):
-            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime("./ip_profiles/background.csv"))
+        if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
         self.last_background_built = tk.Label(self, text=f"Last Background Build: {dt_m}", font="Times 16 bold", fg="dark blue")
         self.last_background_built.pack(side="top", fill="x", pady=10)
 
@@ -186,8 +192,8 @@ class BackgroundPage(tk.Frame):
         newthread.start()
     
     def refresh(self) -> None:
-        if os.path.exists("./ip_profiles/background.csv"):
-            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime("./ip_profiles/background.csv"))
+        if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
             self.last_background_built.config(text = f"Last Background Build: {dt_m}")
         
 
@@ -201,8 +207,8 @@ class ProfilePage(tk.Frame):
         label.pack(side="top", fill="x", pady=10)
 
         dt_m = "Not built"
-        if os.path.exists("./ip_profiles/background.csv"):
-            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime("./ip_profiles/background.csv"))
+        if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
         self.last_background_built = tk.Label(self, text=f"Last Background Build: {dt_m}", font="Times 16 bold", fg="dark blue")
         self.last_background_built.pack(side="top", fill="x", pady=10)
 
@@ -238,8 +244,8 @@ class ProfilePage(tk.Frame):
         button.pack(anchor="s", side="left")
     
     def refresh(self) -> None:
-        if os.path.exists("./ip_profiles/background.csv"):
-            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime("./ip_profiles/background.csv"))
+        if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
             self.last_background_built.config(text = f"Last Background Build: {dt_m}")
 
 
@@ -327,6 +333,33 @@ class AboutPage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="About This Project", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
+        button = tk.Button(self, text="Back to Start Page",
+            highlightbackground='black', height= 5, width=12,
+            command=lambda: controller.show_frame("StartPage"))
+        button.pack(anchor="s", side="left")
+
+class BuiltProfilePage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        label = tk.Label(self, text="Built Profiles", font=controller.title_font)
+        label.pack(side="top", fill="x", pady=10)
+
+
+        listbox = tk.Listbox(self, height = 10,
+                  width = 25,
+                  bg = "light grey",
+                  activestyle = 'dotbox',
+                  font = "Helvetica 25",
+                  fg = "black")
+
+        for values in os.listdir(f"{current_path}/ip_profiles"):
+            if values[-3:] == "csv":
+                listbox.insert(tk.END, values[:-4])
+
+        listbox.pack()
+
         button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
