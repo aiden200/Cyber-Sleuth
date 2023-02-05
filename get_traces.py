@@ -309,14 +309,6 @@ def check_website_in_noisy_trace(file, name):
     else:
         try:
             profile_ip_list = get_profile_ips(f"ip_profiles/{name}.csv", frequency = True)
-            profile_ip_list_24 = []
-            for ip in profile_ip_list:
-                if ip == "":
-                    continue
-                if ":" not in ip[0]:    #only generate 24 bit address for ipv4
-                    ip_split = ip[0].split(".")
-                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
-                    profile_ip_list_24.append([ip_24, ip[1]])
 
             with open(f'csv_files/compare_file.csv','w') as f:
                 subprocess.run(f"tshark -r {file} \
@@ -324,36 +316,23 @@ def check_website_in_noisy_trace(file, name):
         
             compare_ips = get_trace_ips(f"csv_files/compare_file.csv")
 
-            return_list_32 = []
-            return_list_24 = []
+            return_list = []
 
             for ip in compare_ips:
                 if ip == "":
                     continue
-                if ":" not in ip:       #only generate 24 bit address for ipv4
-                    ip_split = ip.split(".")
-                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
 
                 for profile_ip in profile_ip_list:
                     if ip == profile_ip[0]:
-                        in_return_list_32 = False
-                        for return_ip in return_list_32:
+                        in_return_list = False
+                        for return_ip in return_list:
                             if ip == return_ip[0]:
-                                in_return_list_32 = True
-                        if not in_return_list_32:
-                            return_list_32.append(profile_ip)
-
-                for profile_ip_24 in profile_ip_list_24:
-                    if ip_24 and ip_24 == profile_ip_24[0]:
-                        in_return_list_24 = False
-                        for return_ip in return_list_24:
-                            if ip_24 == return_ip[0]:
-                                in_return_list_24 = True
-                        if not in_return_list_24:
-                            return_list_24.append(profile_ip_24)
+                                in_return_list = True
+                        if not in_return_list:
+                            return_list.append(profile_ip)
                         
             
-            return return_list_32, return_list_24
+            return return_list
 
         except Exception as e:
             print(f"Error in check_website_in_noisy_trace error: {e}. Line {traceback.format_exc()}")
@@ -501,6 +480,58 @@ def build_frequency_ip_profile(website):
             writer.writerow([key, total_occurances[key]])
 
 
+'''
+Function: report_to_user
+Reports our confidence that a profiled application is present in a noisy trace.
+    
+Parameters:
+    website_name - string, the name of the webiste being compared
+    matched_list_32 - a list of matched 32 bit IP addresses
+    matched_list_24 - a list of matched 24 bit IP addresses
+Returns:
+    a string with a report of our confidence
+Example usage:
+    report_to_user("spotify", return_list_32
+Notes:
+
+'''
+
+def report_to_user(website_name, matched_list_32):
+    if matched_list_32 == []:
+        return("We are very confident that " + website_name + " is not present in this trace as we did not observe any 32 bit IP address matches")
+    else:
+        match_count_100 = 0
+        match_count_50_more = 0
+        match_count_50_less = 0
+        for match in matched_list_32:
+            if float(match[1]) == 1.00:
+                match_count_100 += 1
+            elif float(match[1]) >= 0.50:
+                match_count_50_more += 1
+            else:
+                match_count_50_less += 1
+
+    if match_count_100 == 1:
+        return("We are very confident that " + website_name + " is present in this trace as " + str(match_count_100) + " IP address in the noisy trace showed up in every trace when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_100 > 1:
+        return("We are extremely confident that " + website_name + " is present in this trace as " + str(match_count_100) + " IP addresses in the noisy trace showed up in every trace when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+            
+    if match_count_50_more >= 1 and match_count_50_less >= 1:
+        return("We are pretty confident that " + website_name + " is present in this trace as there are both IP address matches that showed up in more than 50 percent of the traces and less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_50_more >= 1 and match_count_50_less == 0:
+         return("We are moderately confident that " + website_name + " is present in this trace as there are " + str(match_count_50_more) + " IP address matches that showed up in more than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_50_more == 1 and match_count_50_less == 0:
+        return("It is plausible that " + website_name + " is present in this trace as there is " + str(match_count_50_more) + " IP address match that showed up in more than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_50_more == 0 and match_count_50_less >= 1:
+        return("There is a possibility that " + website_name + " is present in this trace as there are " + str(match_count_50_less) + " IP address matches that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_50_more == 0 and match_count_50_less == 1:
+        return("There is a weak possibility that " + website_name + " is present in this trace as there is " + str(match_count_50_less) + " IP address match that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
 
 def main():
     install_chromedriver()
@@ -508,7 +539,11 @@ def main():
     #build_background_profile(300)
     #build_chrome_profile(2)
     #print(get_profile_ips("ip_profiles/espn.csv", True))
-    #print(get_profile_ips("ip_profiles/chrome.csv"))
+
+    print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
+    espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
+
+    print(report_to_user("espn", espn_matches))
     # sniff_website(2, "https://chess.com", "chess", 5000)
     # build_frequency_ip_profile("chess")
     # filter_ips("chess", "background")
