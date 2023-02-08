@@ -48,39 +48,23 @@ def install_chromedriver():
 
 
 '''
-Reads a csv file and returns four dictionaries. 
-source_ip - a dic with unique ip's of the source and the count of each ip
-dest_ip - a dic with unique ip's of the destination and the count of each ip
-ipv6_source_ip - a dic with unique ipv6's of the source and the count of each ip
-ipv6_dest_ip - a dic with unique ipv6's of the destination and the count of each ip
+Reads a csv file and returns a dictionary with unique ip's 
+that appear in the trace and a count of each ip
 '''
 def get_trace_ips(filename):
     try:
         with open(filename, newline='') as csvfile:
             spamreader = csv.reader(csvfile, delimiter='\t', quotechar='|')
-            next(spamreader)
-            source_ip = {}
-            dest_ip = {}
-            ipv6_source_ip = {}
-            ipv6_dest_ip = {}
+            ips = {}
             for row in spamreader:
-                if row[1] not in source_ip:
-                    source_ip[row[1]] = 1
-                else:
-                    source_ip[row[1]] += 1
-                if row[2] not in dest_ip:
-                    dest_ip[row[2]] = 1
-                else:
-                    dest_ip[row[2]] += 1
-                if row[3] not in ipv6_source_ip:
-                    ipv6_source_ip[row[3]] = 1
-                else:
-                    ipv6_source_ip[row[3]] += 1
-                if row[4] not in ipv6_dest_ip:
-                    ipv6_dest_ip[row[4]] = 1
-                else:
-                    ipv6_dest_ip[row[4]] += 1
-            return source_ip, dest_ip, ipv6_source_ip, ipv6_dest_ip
+                for i in range(1, 3): #was 1 to 5
+                    
+                    if row[i] not in ips:
+                        print(f"row[i] isssss: {row[i]}")
+                        ips[row[i]] = 1
+                    else:
+                        ips[row[i]] += 1
+            return ips
     except Exception as e:
         print(f"Error in function get_trace_ips: {e}")
 
@@ -184,20 +168,11 @@ def build_ip_profiles(website):
 
         csv_files = glob(f"{folder}/*")
         for file in csv_files:
-            src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_trace_ips(file)
-            for key in src_ip:
-                if key and key not in ip_sets:
-                    new_ips.append(key)
-                    ip_sets.append(key)
-            for key in dst_ip:
-                if key and key not in ip_sets:
-                    new_ips.append(key)
-                    ip_sets.append(key)
-            for key in ipv6_src_ip:
-                if key and key not in ip_sets:
-                    new_ips.append(key)
-                    ip_sets.append(key)
-            for key in ipv6_dst_ip:
+            print(f"+++++++++currently within this file: {file}++++++++++++++++++")
+            trace_ips = get_trace_ips(file)
+            # print(" ............... length of trace_ips is:  ", len(trace_ips))
+            for key in trace_ips:
+                # print(f"################### the key in trace_ips({file}) is:  {key} #############")
                 if key and key not in ip_sets:
                     new_ips.append(key)
                     ip_sets.append(key)
@@ -240,24 +215,28 @@ def filter_ips(target_website, filter_website):
         #create list of 24 bit ip addresses
         filter_ips_24 = []
         for ip in filter_ips:
+            if ip == "":
+                continue
             if ":" not in ip:
                 new_filter_ip = ip.split(".")
-                # print('new filter IP')
-                # print(ip)
-                # print()
                 new_filter_ip_24 = new_filter_ip[0] + "." + new_filter_ip[1] + "." + new_filter_ip[2]
-                filter_ips_24.append(new_filter_ip_24)
+            else:   #keep full ipv6 address
+                new_filter_ip_24 = ip
+            filter_ips_24.append(new_filter_ip_24)
 
         #check the first 24 bits of target ips against the filter ips
         for ip in target_ips:
-            if ":" not in ip and ip != "":
+            if ip == "":
+                continue
+            elif ":" not in ip:
                 new_target_ip = ip.split(".")
-                # print('new target IP')
-                # print(ip)
-                # print()
                 new_target_ip_24 = new_target_ip[0] + "." + new_target_ip[1] + "." + new_target_ip[2]
-                if new_target_ip_24 not in filter_ips_24:
-                    filtered_list.append(ip) #add the entire 32 bit ip
+            else:   #keep full ipv6 address
+                new_target_ip_24 = ip
+            
+            if new_target_ip_24 not in filter_ips_24:
+                filtered_list.append(ip) #add the entire 32 bit ip
+
     else:
         for ip in target_ips:
             if ip not in filter_ips:
@@ -335,73 +314,33 @@ def check_website_in_noisy_trace(file, name):
     else:
         try:
             profile_ip_list = get_profile_ips(f"ip_profiles/{name}.csv", frequency = True)
-            profile_ip_list_24 = []
-            for ip in profile_ip_list:
-                if ":" not in ip and ip != "":
-                    ip_split = ip[0].split(".")
-                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
-                    profile_ip_list_24.append([ip_24, ip[1]])
 
             with open(f'csv_files/compare_file.csv','w') as f:
                 subprocess.run(f"tshark -r {file} \
                 -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split(), stdout =f)
         
-            src_ip, dst_ip = get_trace_ips(f"csv_files/compare_file.csv")[0], get_trace_ips(f"csv_files/compare_file.csv")[1]
+            compare_ips = get_trace_ips(f"csv_files/compare_file.csv")
 
-            return_list_32 = []
-            return_list_24 = []
+            return_list = []
 
-
-            for ip in src_ip:
-                if ":" not in ip and ip != "":
-                    ip_split = ip.split(".")
-                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
+            for ip in compare_ips:
+                if ip == "":
+                    continue
 
                 for profile_ip in profile_ip_list:
                     if ip == profile_ip[0]:
-                        in_return_list_32 = False
-                        for return_ip in return_list_32:
+                        in_return_list = False
+                        for return_ip in return_list:
                             if ip == return_ip[0]:
-                                in_return_list_32 = True
-                        if not in_return_list_32:
-                            return_list_32.append(profile_ip)
-
-                for profile_ip_24 in profile_ip_list_24:
-                    if ip_24 == profile_ip_24[0]:
-                        in_return_list_24 = False
-                        for return_ip in return_list_24:
-                            if ip_24 == return_ip[0]:
-                                in_return_list_24 = True
-                        if not in_return_list_24:
-                            return_list_24.append(profile_ip_24)
+                                in_return_list = True
+                        if not in_return_list:
+                            return_list.append(profile_ip)
                         
-            for ip in dst_ip:
-                if ":" not in ip and ip != "":
-                    ip_split = ip.split(".")
-                    ip_24 = ip_split[0] + "." + ip_split[1] + "." + ip_split[2]
-
-                for profile_ip in profile_ip_list:
-                    if ip == profile_ip[0]:
-                        in_return_list_32 = False
-                        for return_ip in return_list_32:
-                            if ip == return_ip[0]:
-                                in_return_list_32 = True
-                        if not in_return_list_32:
-                            return_list_32.append(profile_ip)
-
-                for profile_ip_24 in profile_ip_list_24:
-                    if ip_24 == profile_ip_24[0]:
-                        in_return_list_24 = False
-                        for return_ip in return_list_24:
-                            if ip_24 == return_ip[0]:
-                                in_return_list_24 = True
-                        if not in_return_list_24:
-                            return_list_24.append(profile_ip_24)
             
-            return return_list_32, return_list_24
+            return return_list
 
         except Exception as e:
-            print(f"Error in check_website_in_noisy_trace error: {e}")
+            print(f"Error in check_website_in_noisy_trace error: {e}. Line {traceback.format_exc()}")
             return -1, -1
 
 ##################################################################################################
@@ -522,11 +461,9 @@ def build_frequency_ip_profile(website):
     trace_count = 0
     for file in trace_files:
         local_occurances = {}   # occurances within each file
-        src_ip, dst_ip, ipv6_src_ip, ipv6_dst_ip = get_trace_ips(f"csv_files/{website}/{file}")
-        for key in src_ip: local_occurances[key] = 1
-        for key in dst_ip: local_occurances[key] = 1
-        for key in ipv6_src_ip: local_occurances[key] = 1
-        for key in ipv6_dst_ip: local_occurances[key] = 1
+        trace_ips = get_trace_ips(f"csv_files/{website}/{file}")
+        for key in trace_ips: 
+            local_occurances[key] = 1
 
         for key in local_occurances:
             if key in total_occurances:
@@ -548,19 +485,87 @@ def build_frequency_ip_profile(website):
             writer.writerow([key, total_occurances[key]])
 
 
+'''
+Function: report_to_user
+Reports our confidence that a profiled application is present in a noisy trace.
+    
+Parameters:
+    website_name - string, the name of the webiste being compared
+    matched_list_32 - a list of matched 32 bit IP addresses
+    matched_list_24 - a list of matched 24 bit IP addresses
+Returns:
+    a string with a report of our confidence
+Example usage:
+    report_to_user("spotify", return_list_32
+Notes:
+
+'''
+
+def report_to_user(website_name, matched_list_32):
+    if matched_list_32 == []:
+        return("We are very confident that " + website_name + " is not present in this trace as we did not observe any 32 bit IP address matches")
+    else:
+        match_count_100 = 0
+        match_count_50_more = 0
+        match_count_50_less = 0
+        for match in matched_list_32:
+            if float(match[1]) == 1.00:
+                match_count_100 += 1
+            elif float(match[1]) >= 0.50:
+                match_count_50_more += 1
+            else:
+                match_count_50_less += 1
+
+    if match_count_100 == 1:
+        return("We are very confident that " + website_name + " is present in this trace as " + str(match_count_100) + " IP address in the noisy trace showed up in every trace when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_100 > 1:
+        return("We are extremely confident that " + website_name + " is present in this trace as " + str(match_count_100) + " IP addresses in the noisy trace showed up in every trace when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+            
+    if match_count_50_more >= 1 and match_count_50_less >= 1:
+        return("We are pretty confident that " + website_name + " is present in this trace as there are both IP address matches that showed up in more than 50 percent of the traces and less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_50_more >= 1 and match_count_50_less == 0:
+         return("We are moderately confident that " + website_name + " is present in this trace as there are " + str(match_count_50_more) + " IP address matches that showed up in more than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_50_more == 1 and match_count_50_less == 0:
+        return("It is plausible that " + website_name + " is present in this trace as there is " + str(match_count_50_more) + " IP address match that showed up in more than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_50_more == 0 and match_count_50_less >= 1:
+        return("There is a possibility that " + website_name + " is present in this trace as there are " + str(match_count_50_less) + " IP address matches that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
+    if match_count_50_more == 0 and match_count_50_less == 1:
+        return("There is a weak possibility that " + website_name + " is present in this trace as there is " + str(match_count_50_less) + " IP address match that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+
 
 def main():
-    install_chromedriver()
-    # filter_ips("chrome", "background")
-    # build_background_profile(300)
-    # build_chrome_profile(2)
-    # print(get_profile_ips("ip_profiles/espn.csv", True))
-    # print(get_profile_ips("ip_profiles/chrome.csv"))
-    # sniff_website(2, "https://chess.com", "chess", 5000)
-    # build_frequency_ip_profile("chess")
-    # filter_ips("chess", "background")
-    # filter_ips("chess", "chrome")
-    print(check_website_in_noisy_trace("traces/chess/chess_trace1.pcap", "chess"))
+    # install_chromedriver()
+    filter_ips("chrome", "background")
+    print("=============FINISHED CHECKPOINT 1================")
+    build_background_profile(30)
+    print("=============FINISHED CHECKPOINT 2================")
+    build_chrome_profile(2)
+    print("=============FINISHED CHECKPOINT 3================")
+    
+    print(get_profile_ips("ip_profiles/espn.csv", True))
+    print("=============FINISHED CHECKPOINT 4================")
+
+    print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
+    print("=============FINISHED CHECKPOINT 5================")
+    espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
+    print("=============FINISHED CHECKPOINT 6================")
+
+    print(report_to_user("espn", espn_matches))
+    print("=============FINISHED CHECKPOINT 6================")
+    sniff_website(2, "https://chess.com", "chess", 5000)
+    print("=============FINISHED CHECKPOINT 7================")
+    build_frequency_ip_profile("chess")
+    print("=============FINISHED CHECKPOINT 8================")
+    filter_ips("chess", "background")
+    print("=============FINISHED CHECKPOINT 9================")
+    filter_ips("chess", "chrome")
+    print("=============FINISHED CHECKPOINT 10================")
+    
     
 
 
