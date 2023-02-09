@@ -145,6 +145,9 @@ class BackgroundPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+        self.number_of_trace = 0 # need to get the correct number of these
+        self.timeout = 30
+
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
         
@@ -161,16 +164,25 @@ class BackgroundPage(tk.Frame):
             command=lambda:self.refresh())
         refresh_button.pack(side="top", pady=10)
 
+        label = tk.Label(self, text=f"Enter timeout (recommended: {self.number_of_trace})")
+        label.pack(side="top", fill="x", pady=10)
+        self.inputtxt = tk.Text(self,
+                        height = 3,
+                        width = 20)
+        
+        self.inputtxt.pack()
+
 
         background_button = tk.Button(self, text="Start Background Trace",
-            highlightbackground='black', height= 5, width=20,
-            command=lambda:self.start_background_process(30))
+            highlightbackground='black', height= 5, width=12,
+            command=lambda:self.start_background_process())
 
         button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         background_button.pack(side="top", pady=10)
         button.pack(anchor="s", side="left")
+
     
     def build_background_on_thread(self, timeout : int) -> None:
 
@@ -187,8 +199,11 @@ class BackgroundPage(tk.Frame):
             self.label1.config(text="Error in building background profile, please check error message")
             print(e)
 
-    def start_background_process(self, timeout : int) -> None:
-        newthread = threading.Thread(target=self.build_background_on_thread, args = (timeout,))
+    def start_background_process(self) -> None:
+        inp = self.inputtxt.get(1.0, "end-1c")
+        if inp and inp.isdigit():
+            self.timeout = int(input)
+        newthread = threading.Thread(target=self.build_background_on_thread, args = (self.timeout,))
         newthread.start()
     
     def refresh(self) -> None:
