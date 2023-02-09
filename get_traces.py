@@ -263,7 +263,6 @@ Notes:
 
 def build_background_profile(time_limit):
     print("Starting to build background profile")
-    
     # If folders don't exist, then create them.
     MYDIR = (f"traces/background")
     if not os.path.isdir(MYDIR):
