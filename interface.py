@@ -144,7 +144,7 @@ class BackgroundPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        self.number_of_trace = 0 # need to get the correct number of these
+        self.number_of_traces = 20 # need to get the correct number of these
         self.timeout = 60 # need to change this
 
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
@@ -163,7 +163,7 @@ class BackgroundPage(tk.Frame):
             command=lambda:self.refresh())
         refresh_button.pack(side="top", pady=10)
 
-        label = tk.Label(self, text=f"Enter timeout (recommended: {self.number_of_trace})")
+        label = tk.Label(self, text=f"Enter timeout (recommended: {self.timeout})")
         label.pack(side="top", fill="x", pady=10)
         self.inputtxt = tk.Text(self,
                         height = 3,
@@ -190,7 +190,7 @@ class BackgroundPage(tk.Frame):
         try:
             install_chromedriver()
             build_background_profile(timeout)
-            build_chrome_profile(timeout)
+            build_chrome_profile(self.number_of_traces)
             global BACKGROUND_BUILT
             BACKGROUND_BUILT = True
             self.label1.config(text="Done Building Background Profile")

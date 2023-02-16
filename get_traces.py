@@ -362,7 +362,7 @@ def build_chrome_profile(trace_count):
         print(f"Error in function build_chrome_profile: \n No background profile exists. Use build_background_profile first")
         return -1
     print("Starting to build chrome profile")
-    sniff_website(trace_count, "https://www.google.com", "chrome", 5000)
+    sniff_website(trace_count, "https://www.google.com", "chrome", 1500)
     build_ip_profiles("chrome")
     if filter_ips("chrome", "background") != 0:
         print("Failed in making chrome profile")
