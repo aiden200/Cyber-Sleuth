@@ -37,7 +37,7 @@ import logging as log
 
 
 #importing trace functions
-# from get_traces import *
+from get_traces import *
 
 log.basicConfig(filename='log.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 log.getLogger().setLevel(log.INFO)
@@ -46,7 +46,7 @@ log.info("Starting Log file")
 current_path = os.path.dirname(os.path.abspath(__file__))
 PLACEHOLDER = None
 BACKGROUND_BUILT = False
-# install_chromedriver()
+install_chromedriver()
 
 def test_function1():
     print("In test function 1!")
@@ -118,19 +118,19 @@ class StartPage(tk.Frame):
                             command=lambda: controller.show_frame("UploadTracePage"))
         button7 = tk.Button(self, text="Check Built Profiles", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
                             command=lambda: controller.show_frame("BuiltProfilePage"))
-        # clear_button = tk.Button(self, text="Clear Folders", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
-        #                     command=lambda: reset_folders())
+        clear_button = tk.Button(self, text="Clear Folders", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
+                            command=lambda: reset_folders())
         button5 = tk.Button(self, text="About", highlightbackground='black', height= 5, width=10,
                             command=lambda: controller.show_frame("AboutPage"))
         button6 = tk.Button(self, text="Quit", highlightbackground='black', height= 5, width=10, 
                             command=controller.destroy)
-        # button5 = tk.Button(self, text="Exit", command=self.destroy)
+
         button1.pack()
         button2.pack()
         button3.pack()
         button4.pack()
         button7.pack()
-        # clear_button.pack()
+        clear_button.pack()
         button5.pack(anchor="s", side="right")
         button6.pack(anchor="s", side="left")
         
@@ -200,9 +200,9 @@ class BackgroundPage(tk.Frame):
         self.label1.config(text="Building background in process...")
 
         try:
-            # install_chromedriver()
-            # build_background_profile(timeout)
-            # build_chrome_profile(self.number_of_traces)
+            install_chromedriver()
+            build_background_profile(timeout)
+            build_chrome_profile(self.number_of_traces)
             global BACKGROUND_BUILT
             BACKGROUND_BUILT = True
             dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
@@ -286,8 +286,8 @@ class ProfilePage(tk.Frame):
                     self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
 
                     # CHANGE BACK TO 20
-                    # newthread = threading.Thread(target=build_profile_without_noise, args = (2,inp,domain))
-                    # newthread.start()
+                    newthread = threading.Thread(target=build_profile_without_noise, args = (2,inp,domain))
+                    newthread.start()
                     log.info(f"Built profile for website: {inp}")
                 except Exception as e:
                     self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
@@ -343,8 +343,8 @@ class UploadTracePage(tk.Frame):
         upload_button = tk.Button(self, text="Choose a File...", command=lambda:self.UploadPcap())
         upload_button.pack()
 
-        report_button = tk.Button(self, text="Generate Report", command=lambda:self.start_report())
-        report_button.pack()
+        report_button = tk.Button(self, text="Generate Report", highlightbackground='black', height= 5, width=12,command=lambda:self.start_report())
+        report_button.pack(pady=50)
 
         back_button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
@@ -397,7 +397,7 @@ class UploadTracePage(tk.Frame):
                     except Exception as e:
                         log.critical(f"Failed to generate report on file: {PLACEHOLDER}, with profile {profile_name}\n Exception: {e}")
 
-        # make_charts(log)
+        make_charts(log)
         self.label1.config(text="Generated Report")
         log.info(f"Generated report with file: {PLACEHOLDER}")
 
@@ -454,7 +454,7 @@ class BuiltProfilePage(tk.Frame):
         # Updating label text to selected option
         selected_name = f"{self.listbox.get(cs)}.csv"
         log.info(f"Making graph for profile: {selected_name}")
-        # make_individual_charts(selected_name, log)
+        make_individual_charts(selected_name, log)
         
 
 
