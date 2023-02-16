@@ -117,7 +117,8 @@ def sniff_website(trace_count, website, name, packet_count = 1000):
         os.makedirs(MYDIR)
 
     for i in range(1, trace_count + 1):
-        browser = webdriver.Chrome()
+        # browser = webdriver.Chrome()
+        browser = webdriver.Chrome(executable_path='/Users/shaunbaron-furuyama/Desktop/Comps/automation/comps/chromedriver')
         if website != 0:
             browser.get(website)
         capture = sniff(packet_count)
@@ -502,6 +503,8 @@ def report_to_user(website_name, matched_list_32):
         match_count_100 = 0
         match_count_50_more = 0
         match_count_50_less = 0
+        if matched_list_32 is None:
+            breakpoint()
         for match in matched_list_32:
             if float(match[1]) == 1.00:
                 match_count_100 += 1
@@ -534,19 +537,37 @@ def report_to_user(website_name, matched_list_32):
 
 def main():
     install_chromedriver()
-    #filter_ips("chrome", "background")
-    #build_background_profile(300)
-    #build_chrome_profile(2)
-    #print(get_profile_ips("ip_profiles/espn.csv", True))
+    print(" == 1 DONE ==")
+    filter_ips("chrome", "background")
+    print(" == 2 DONE ==")
+    build_background_profile(30)
+    print(" == 3 DONE ==")
+    build_chrome_profile(2)
+    print(" == 4 DONE ==")
+    build_profile_without_noise(2, "https://open.spotify.com", "spotify")
+    print(" == 5 DONE ==")
 
-    print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
-    espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
+    print(get_profile_ips("ip_profiles/espn.csv", True))
+    print(" == 6 DONE ==")
 
-    print(report_to_user("espn", espn_matches))
-    # sniff_website(2, "https://chess.com", "chess", 5000)
-    # build_frequency_ip_profile("chess")
-    # filter_ips("chess", "background")
-    # filter_ips("chess", "chrome")
+    print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "spotify"))
+    spotify_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "spotify")
+    print(" == 7 DONE ==")
+
+    # print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
+    # espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
+
+    # print(report_to_user("espn", espn_matches))
+    print(report_to_user("spotify", spotify_matches))
+    print(" == 8 DONE ==")
+    sniff_website(2, "https://chess.com", "chess", 5000)
+    print(" == 9 DONE ==")
+    build_frequency_ip_profile("chess")
+    print(" == 10 DONE ==")
+    filter_ips("chess", "background")
+    print(" == 11 DONE ==")
+    filter_ips("chess", "chrome")
+    print(" == 12 DONE ==")
     
     
 
