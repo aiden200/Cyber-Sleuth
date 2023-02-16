@@ -30,18 +30,23 @@ import shutil
 import threading
 from urllib.parse import urlparse
 import datetime
+import logging as log
 
 
 
 
 
 #importing trace functions
-from get_traces import *
+# from get_traces import *
 
+log.basicConfig(filename='log.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+log.getLogger().setLevel(log.INFO)
+log.info("-"*10)
+log.info("Starting Log file")
 current_path = os.path.dirname(os.path.abspath(__file__))
 PLACEHOLDER = None
 BACKGROUND_BUILT = False
-install_chromedriver()
+# install_chromedriver()
 
 def test_function1():
     print("In test function 1!")
@@ -87,6 +92,7 @@ class SampleApp(tk.Tk):
     def show_frame(self, page_name : str) -> None:
         '''Show a frame for the given page name'''
         frame = self.frames[page_name]
+        frame.event_generate("<<ShowFrame>>")
         # frame.winfo_toplevel().geometry("")
         frame.tkraise()
 
@@ -112,6 +118,8 @@ class StartPage(tk.Frame):
                             command=lambda: controller.show_frame("UploadTracePage"))
         button7 = tk.Button(self, text="Check Built Profiles", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
                             command=lambda: controller.show_frame("BuiltProfilePage"))
+        # clear_button = tk.Button(self, text="Clear Folders", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
+        #                     command=lambda: reset_folders())
         button5 = tk.Button(self, text="About", highlightbackground='black', height= 5, width=10,
                             command=lambda: controller.show_frame("AboutPage"))
         button6 = tk.Button(self, text="Quit", highlightbackground='black', height= 5, width=10, 
@@ -122,6 +130,7 @@ class StartPage(tk.Frame):
         button3.pack()
         button4.pack()
         button7.pack()
+        # clear_button.pack()
         button5.pack(anchor="s", side="right")
         button6.pack(anchor="s", side="left")
         
@@ -160,10 +169,6 @@ class BackgroundPage(tk.Frame):
         self.last_background_built = tk.Label(self, text=f"Last Background Build: {dt_m}", font="Times 16 bold", fg="dark blue")
         self.last_background_built.pack(side="top", fill="x", pady=10)
 
-        refresh_button = tk.Button(self, text="refresh",
-            command=lambda:self.refresh())
-        refresh_button.pack(side="top", pady=10)
-
         label = tk.Label(self, text=f"Enter timeout (recommended: {self.timeout})")
         label.pack(side="top", fill="x", pady=10)
         self.inputtxt = tk.Text(self,
@@ -174,30 +179,39 @@ class BackgroundPage(tk.Frame):
 
 
         background_button = tk.Button(self, text="Start Background Trace",
-            highlightbackground='black', height= 5, width=12,
+            highlightbackground='black', height= 5, width=15,
             command=lambda:self.start_background_process())
+        self.label1 = tk.Label(self, text="")
+        self.label1.pack(side="top", fill="x", pady=10)
 
         button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         background_button.pack(side="top", pady=10)
         button.pack(anchor="s", side="left")
+    
+    
+    
 
     
     def build_background_on_thread(self, timeout : int) -> None:
 
-        self.label1 = tk.Label(self, text="Building background in process...")
-        self.label1.pack(side="top", fill="x", pady=10)
+        log.info("Building background in process...")
+        self.label1.config(text="Building background in process...")
+
         try:
-            install_chromedriver()
-            build_background_profile(timeout)
-            build_chrome_profile(self.number_of_traces)
+            # install_chromedriver()
+            # build_background_profile(timeout)
+            # build_chrome_profile(self.number_of_traces)
             global BACKGROUND_BUILT
             BACKGROUND_BUILT = True
+            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
+            self.last_background_built.config(text = f"Last Background Build: {dt_m}")
             self.label1.config(text="Done Building Background Profile")
+            log.info("Done Building Background Profile in ./traces/background")
         except Exception as e:
-            self.label1.config(text="Error in building background profile, please check error message")
-            print(e)
+            self.label1.config(text="Error in building background profile, please check log file")
+            log.critical(f"Failed building background profile with exception {e}")
 
     def start_background_process(self) -> None:
         inp = self.inputtxt.get(1.0, "end-1c")
@@ -206,10 +220,6 @@ class BackgroundPage(tk.Frame):
         newthread = threading.Thread(target=self.build_background_on_thread, args = (self.timeout,))
         newthread.start()
     
-    def refresh(self) -> None:
-        if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
-            dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
-            self.last_background_built.config(text = f"Last Background Build: {dt_m}")
         
 
 
@@ -227,10 +237,6 @@ class ProfilePage(tk.Frame):
         self.last_background_built = tk.Label(self, text=f"Last Background Build: {dt_m}", font="Times 16 bold", fg="dark blue")
         self.last_background_built.pack(side="top", fill="x", pady=10)
 
-        refresh_button = tk.Button(self, text="refresh",
-            command=lambda:self.refresh())
-        refresh_button.pack(side="top", pady=10)
-
 
         # TextBox Creation
         self.inputtxt = tk.Text(self,
@@ -245,7 +251,7 @@ class ProfilePage(tk.Frame):
                                 command = lambda:self.build_website_background(), height= 5, width=12)
         printButton.pack(side="top", pady=10)
 
-        
+        self.bind("<<ShowFrame>>", self.on_show_frame)
         self.lbl = tk.Label(self, text = "")
         self.lbl.pack()
 
@@ -254,11 +260,12 @@ class ProfilePage(tk.Frame):
  
     
         button = tk.Button(self, text="Back to Start Page",
-            highlightbackground='black', height= 5, width=12,
+            highlightbackground='black', height= 5, width=13,
             command=lambda: controller.show_frame("StartPage"))
         button.pack(anchor="s", side="left")
     
-    def refresh(self) -> None:
+
+    def on_show_frame(self, event):
         if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
             dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
             self.last_background_built.config(text = f"Last Background Build: {dt_m}")
@@ -267,21 +274,29 @@ class ProfilePage(tk.Frame):
     def build_website_background(self) -> None:
         inp = self.inputtxt.get(1.0, "end-1c")
         self.lbl.config(text = "Selected Website: "+inp)
+        log.info(f"Requesting a build for website: {inp}")
         domain = urlparse(inp).netloc
-        if BACKGROUND_BUILT and inp and domain:
-            try:
-                self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
-
-                # CHANGE BACK TO 20
-                newthread = threading.Thread(target=build_profile_without_noise, args = (2,inp,domain))
-                newthread.start()
-            except Exception as e:
-                self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
-                print(f"Failed with exception {e}")
+        if domain == "google.com" or domain == "www.google.com":
+            domain = None
+            inp = None
+            self.build_background_label.config(text = "Google profiles cannot be built using this program")
         else:
-            self.build_background_label.config(text = "Background not built yet")
-            if BACKGROUND_BUILT:
-                self.build_background_label.config(text = "Background is built, incorrect format with input website. Exmp: https://open.spotify.com/")
+            if BACKGROUND_BUILT and inp and domain:
+                try:
+                    self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
+
+                    # CHANGE BACK TO 20
+                    # newthread = threading.Thread(target=build_profile_without_noise, args = (2,inp,domain))
+                    # newthread.start()
+                    log.info(f"Built profile for website: {inp}")
+                except Exception as e:
+                    self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
+                    log.critical(f"Failed to build {inp} profile with exception {e}")
+            else:
+                self.build_background_label.config(text = "Background not built yet")
+                if BACKGROUND_BUILT:
+                    self.build_background_label.config(text = "Background is built, incorrect format with input website. Exmp: https://open.spotify.com/")
+                log.warning("Failed to build background profile with unsatisfied prerequisites")
 
 
 
@@ -359,6 +374,7 @@ class UploadTracePage(tk.Frame):
             label.pack(side="top", fill="x", pady=10)
     
     def start_report(self) -> None:
+        log.info(f"Building report with filename chosen: {filename}")
         self.label1 = tk.Label(self, text="Building report in progress...")
         self.label1.pack(side="top", fill="x", pady=10)
         if PLACEHOLDER != None:
@@ -374,10 +390,16 @@ class UploadTracePage(tk.Frame):
             if values[-3:] == "csv":
                 profile_name = values[:-4]
                 if profile_name != "background" and profile_name != "chrome":
-                    matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
-                    report = report_to_user(profile_name, matches)
-                    print(report)
+                    try:
+                        matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
+                        report = report_to_user(profile_name, matches)
+                        print(report)
+                    except Exception as e:
+                        log.critical(f"Failed to generate report on file: {PLACEHOLDER}, with profile {profile_name}\n Exception: {e}")
+
+        # make_charts(log)
         self.label1.config(text="Generated Report")
+        log.info(f"Generated report with file: {PLACEHOLDER}")
 
 
 
@@ -402,30 +424,42 @@ class BuiltProfilePage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="Built Profiles", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
+        
+        self.bind("<<ShowFrame>>", self.on_show_frame)
 
-
-        listbox = tk.Listbox(self, height = 10,
+        self.listbox = tk.Listbox(self, height = 10,
                   width = 25,
                   bg = "light grey",
                   activestyle = 'dotbox',
                   font = "Helvetica 25",
                   fg = "black")
 
-        for values in os.listdir(f"{current_path}/ip_profiles"):
-            if values[-3:] == "csv":
-                listbox.insert(tk.END, values[:-4])
 
-        listbox.pack()
+        self.listbox.bind('<Double-1>', self.go)
+        self.listbox.pack()
 
         button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         button.pack(anchor="s", side="left")
+    
+    def on_show_frame(self, event):
+        self.listbox.delete(0,tk.END)
+        for values in os.listdir(f"{current_path}/ip_profiles"):
+            if values[-3:] == "csv":
+                self.listbox.insert(tk.END, values[:-4])
 
+    def go(self, event):
+        cs = self.listbox.curselection()
+        # Updating label text to selected option
+        selected_name = f"{self.listbox.get(cs)}.csv"
+        log.info(f"Making graph for profile: {selected_name}")
+        # make_individual_charts(selected_name, log)
+        
 
 
 if __name__ == "__main__":
     app = SampleApp()
-    app.geometry("800x500")
+    app.geometry("800x550")
     app.mainloop()
 
