@@ -360,7 +360,7 @@ class UploadTracePage(tk.Frame):
         self.label1 = tk.Label(self, text="Building report in progress...")
         self.label1.pack(side="top", fill="x", pady=10)
         if PLACEHOLDER != None:
-            newthread = threading.Thread(target=generateReport)
+            newthread = threading.Thread(target=self.generateReport)
             newthread.start()
         else:
             self.label1.config(text="File not selected")
