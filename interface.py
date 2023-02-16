@@ -333,6 +333,20 @@ class UploadTracePage(tk.Frame):
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         back_button.pack(anchor="s", side="left")
+        
+     #def display_graph(self):
+        #for graphs in os.listdir(f"{current_path}/bar_charts"):
+            #newWindow = tk.Toplevel(self)
+            #newWindow.title((current_path) + "/bar_charts/" + graphs)
+            #newWindow.geometry("600x500")
+
+            #pic = Image.open(os.path.join(f"{current_path}/bar_charts/", graphs))
+            #resized = pic.resize((600, 450))
+            #graph = ImageTk.PhotoImage(resized)
+
+            #graph_label = tk.Label(newWindow, image = graph)
+            #graph_label.image = graph
+            #graph_label.place(anchor='center', relx=0.5, rely=0.5)
 
     #User uploads pcap and pcapng files to UploadTraces Page
     def UploadPcap(self, pkt=None) -> None:
