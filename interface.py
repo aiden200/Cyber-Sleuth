@@ -36,7 +36,7 @@ import datetime
 
 
 #importing trace functions
-# from get_traces import *
+from get_traces import *
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 PLACEHOLDER = None
@@ -188,9 +188,9 @@ class BackgroundPage(tk.Frame):
         self.label1 = tk.Label(self, text="Building background in process...")
         self.label1.pack(side="top", fill="x", pady=10)
         try:
-            # install_chromedriver()
-            # build_background_profile(timeout)
-            # build_chrome_profile(timeout)
+            install_chromedriver()
+            build_background_profile(timeout)
+            build_chrome_profile(timeout)
             global BACKGROUND_BUILT
             BACKGROUND_BUILT = True
             self.label1.config(text="Done Building Background Profile")
@@ -271,8 +271,8 @@ class ProfilePage(tk.Frame):
             try:
                 self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
 
-                # newthread = threading.Thread(target=build_profile_without_noise, args = (20,inp,domain))
-                # newthread.start()
+                newthread = threading.Thread(target=build_profile_without_noise, args = (20,inp,domain))
+                newthread.start()
             except Exception as e:
                 self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
                 print(f"Failed with exception {e}")
@@ -326,7 +326,7 @@ class UploadTracePage(tk.Frame):
         upload_button = tk.Button(self, text="Choose a File...", command=lambda:self.UploadPcap())
         upload_button.pack()
 
-        report_button = tk.Button(self, text="Generate Report", command=lambda:self.UploadPcap())
+        report_button = tk.Button(self, text="Generate Report", command=lambda:self.start_report())
         report_button.pack()
 
         back_button = tk.Button(self, text="Back to Start Page",
