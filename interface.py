@@ -168,7 +168,7 @@ class BackgroundPage(tk.Frame):
         label.pack(side="top", fill="x", pady=10)
         self.inputtxt = tk.Text(self,
                         height = 3,
-                        width = 20)
+                        width = 20, borderwidth=1, relief='solid')
         
         self.inputtxt.pack()
 
@@ -235,7 +235,7 @@ class ProfilePage(tk.Frame):
         # TextBox Creation
         self.inputtxt = tk.Text(self,
                         height = 3,
-                        width = 40)
+                        width = 40, borderwidth=1, relief='solid')
         
         self.inputtxt.pack()
 
