@@ -533,16 +533,16 @@ def report_to_user(website_name, matched_list_32):
 
 
 def main():
-    install_chromedriver()
+    reset_folders()
+    #install_chromedriver()
     #filter_ips("chrome", "background")
     #build_background_profile(300)
     #build_chrome_profile(2)
     #print(get_profile_ips("ip_profiles/espn.csv", True))
 
-    print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
-    espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
-
-    print(report_to_user("espn", espn_matches))
+    #print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
+    #espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
+    #print(report_to_user("espn", espn_matches))
     # sniff_website(2, "https://chess.com", "chess", 5000)
     # build_frequency_ip_profile("chess")
     # filter_ips("chess", "background")
