@@ -533,7 +533,8 @@ def report_to_user(website_name, matched_list_32):
 
 
 def main():
-    reset_folders()
+    pass
+    # reset_folders()
     #install_chromedriver()
     #filter_ips("chrome", "background")
     #build_background_profile(300)

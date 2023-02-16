@@ -41,6 +41,7 @@ from get_traces import *
 current_path = os.path.dirname(os.path.abspath(__file__))
 PLACEHOLDER = None
 BACKGROUND_BUILT = False
+install_chromedriver()
 
 def test_function1():
     print("In test function 1!")
@@ -144,7 +145,7 @@ class BackgroundPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        self.number_of_traces = 20 # need to get the correct number of these
+        self.number_of_traces = 2 # need to get the correct number of these CHANGE BACK TO 20
         self.timeout = 60 # need to change this
 
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
@@ -271,7 +272,8 @@ class ProfilePage(tk.Frame):
             try:
                 self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
 
-                newthread = threading.Thread(target=build_profile_without_noise, args = (20,inp,domain))
+                # CHANGE BACK TO 20
+                newthread = threading.Thread(target=build_profile_without_noise, args = (2,inp,domain))
                 newthread.start()
             except Exception as e:
                 self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
