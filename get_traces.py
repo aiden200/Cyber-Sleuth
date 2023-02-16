@@ -308,7 +308,6 @@ def check_website_in_noisy_trace(file, name):
     else:
         try:
             profile_ip_list = get_profile_ips(f"ip_profiles/{name}.csv", frequency = True)
-            print(profile_ip_list)
 
             with open(f'csv_files/compare_file.csv','w') as f:
                 subprocess.run(f"tshark -r {file} \
@@ -535,7 +534,7 @@ def report_to_user(website_name, matched_list_32):
 
 def main():
     pass
-    # reset_folders()
+    #reset_folders()
     #install_chromedriver()
     #filter_ips("chrome", "background")
     #build_background_profile(300)

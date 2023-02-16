@@ -373,7 +373,6 @@ class UploadTracePage(tk.Frame):
         for values in os.listdir(f"{current_path}/ip_profiles"):
             if values[-3:] == "csv":
                 profile_name = values[:-4]
-                print(profile_name)
                 if profile_name != "background" and profile_name != "chrome":
                     matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
                     report = report_to_user(profile_name, matches)
