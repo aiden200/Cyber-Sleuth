@@ -308,6 +308,7 @@ def check_website_in_noisy_trace(file, name):
     else:
         try:
             profile_ip_list = get_profile_ips(f"ip_profiles/{name}.csv", frequency = True)
+            print(profile_ip_list)
 
             with open(f'csv_files/compare_file.csv','w') as f:
                 subprocess.run(f"tshark -r {file} \
@@ -399,7 +400,7 @@ def build_profile_without_noise(trace_count, website, name):
 
     print(f"Starting to build {name}")
     sniff_website(trace_count, website, name)
-    build_ip_profiles(name)
+    build_frequency_ip_profile(name)
     filter_ips(name,"background")
     filter_ips(name,"chrome")
     print(f"Done with building {name}")
