@@ -36,8 +36,7 @@ import datetime
 
 
 #importing trace functions
-# from get_traces import *
-# from scapy.all import *
+from get_traces import *
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 PLACEHOLDER = None
@@ -146,7 +145,7 @@ class BackgroundPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.number_of_trace = 0 # need to get the correct number of these
-        self.timeout = 30
+        self.timeout = 60 # need to change this
 
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
@@ -189,9 +188,9 @@ class BackgroundPage(tk.Frame):
         self.label1 = tk.Label(self, text="Building background in process...")
         self.label1.pack(side="top", fill="x", pady=10)
         try:
-            # install_chromedriver()
-            # build_background_profile(timeout)
-            # build_chrome_profile(timeout)
+            install_chromedriver()
+            build_background_profile(timeout)
+            build_chrome_profile(timeout)
             global BACKGROUND_BUILT
             BACKGROUND_BUILT = True
             self.label1.config(text="Done Building Background Profile")
@@ -202,7 +201,7 @@ class BackgroundPage(tk.Frame):
     def start_background_process(self) -> None:
         inp = self.inputtxt.get(1.0, "end-1c")
         if inp and inp.isdigit():
-            self.timeout = int(input)
+            self.timeout = int(inp)
         newthread = threading.Thread(target=self.build_background_on_thread, args = (self.timeout,))
         newthread.start()
     
@@ -272,8 +271,8 @@ class ProfilePage(tk.Frame):
             try:
                 self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
 
-                # newthread = threading.Thread(target=build_profile_without_noise, args = (400,inp,domain))
-                # newthread.start()
+                newthread = threading.Thread(target=build_profile_without_noise, args = (20,inp,domain))
+                newthread.start()
             except Exception as e:
                 self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
                 print(f"Failed with exception {e}")
@@ -326,10 +325,28 @@ class UploadTracePage(tk.Frame):
         label.pack(side="top", fill="x", pady=10)
         upload_button = tk.Button(self, text="Choose a File...", command=lambda:self.UploadPcap())
         upload_button.pack()
+
+        report_button = tk.Button(self, text="Generate Report", command=lambda:self.start_report())
+        report_button.pack()
+
         back_button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         back_button.pack(anchor="s", side="left")
+        
+     #def display_graph(self):
+        #for graphs in os.listdir(f"{current_path}/bar_charts"):
+            #newWindow = tk.Toplevel(self)
+            #newWindow.title((current_path) + "/bar_charts/" + graphs)
+            #newWindow.geometry("600x500")
+
+            #pic = Image.open(os.path.join(f"{current_path}/bar_charts/", graphs))
+            #resized = pic.resize((600, 450))
+            #graph = ImageTk.PhotoImage(resized)
+
+            #graph_label = tk.Label(newWindow, image = graph)
+            #graph_label.image = graph
+            #graph_label.place(anchor='center', relx=0.5, rely=0.5)
 
     #User uploads pcap and pcapng files to UploadTraces Page
     def UploadPcap(self, pkt=None) -> None:
@@ -338,6 +355,28 @@ class UploadTracePage(tk.Frame):
             PLACEHOLDER = filename
             label = tk.Label(self, text=f"Chosen: {filename}")
             label.pack(side="top", fill="x", pady=10)
+    
+    def start_report(self) -> None:
+        self.label1 = tk.Label(self, text="Building report in progress...")
+        self.label1.pack(side="top", fill="x", pady=10)
+        if PLACEHOLDER != None:
+            newthread = threading.Thread(target=generateReport)
+            newthread.start()
+        else:
+            self.label1.config(text="File not selected")
+
+
+
+    def generateReport(self) -> None:
+        for values in os.listdir(f"{current_path}/ip_profiles"):
+            if values[-3:] == "csv":
+                profile_name = values[:-4]
+                matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
+                report = report_to_user(profile_name, matches)
+                print(report)
+        self.label1.config(text="Generated Report")
+
+
 
 
 
