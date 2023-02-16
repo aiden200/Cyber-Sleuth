@@ -33,6 +33,15 @@ import sys
 import datetime
 from shutil import rmtree
 
+# imports for graphs below:
+import pandas as pd
+import numpy as np
+import chart_studio.plotly as py
+import cufflinks as cf
+import plotly.express as px
+import plotly.graph_objects as go
+
+
 '''
 Installs chromedriver
 Required for any Selenium Chrome activity
@@ -535,6 +544,40 @@ def report_to_user(website_name, matched_list_32):
     if match_count_50_more == 0 and match_count_50_less == 1:
         return("There is a weak possibility that " + website_name + " is present in this trace as there is " + str(match_count_50_less) + " IP address match that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
+##################################################################################################
+# Section below is for creating graphs
+##################################################################################################
+
+def add_headers_to_profiles():
+    header_list = ["ip_address", "frequency_percentage"]
+    ip_profiles = map(os.path.basename, glob("ip_profiles/*"))
+    for profile in ip_profiles:
+        df = pd.read_csv(f"ip_profiles/{profile}", header=None)
+        df.rename(columns={0: 'ip_address', 1: 'frequency_percentage'}, inplace=True)
+        df.to_csv(f"ip_profiles/{profile}", index=False) # save to new csv file
+
+
+def make_charts():
+    if not os.path.exists("bar_charts"):
+        os.mkdir("bar_charts")
+    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
+    ip_profiles = map(os.path.basename, glob("ip_profiles/*"))
+    cols = ["ip_address", "frequency_percentage"]
+    for profile in ip_profiles:
+        if profile in exclusions:
+            continue
+        df = pd.read_csv(f"ip_profiles/{profile}", names=cols, header=None)
+        fig = px.bar(df, x="ip_address", y="frequency_percentage",
+                   title="IP Address Frequency",
+                   labels={
+                    "ip_address" : "IP Address",
+                    "frequency_percentage" : "Percentage of Times IP Address was Present in Each Trace"}
+                    )
+        fig.update_xaxes(categoryorder='category ascending')
+        fig.show()
+        fig.write_image(f"bar_charts/{profile}fig.jpeg")  
+
+
 
 def main():
     # below from main branch
@@ -557,6 +600,11 @@ def main():
 
     # below from shaun's branch
 
+
+    add_headers_to_profiles()
+    make_charts()
+
+    '''
     install_chromedriver()
     print(" == 1 DONE ==")
     filter_ips("chrome", "background")
@@ -589,7 +637,7 @@ def main():
     print(" == 11 DONE ==")
     filter_ips("chess", "chrome")
     print(" == 12 DONE ==")
-    
+    '''
     
 
 
