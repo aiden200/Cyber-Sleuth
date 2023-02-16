@@ -106,7 +106,7 @@ Notes:
     mine was done like this:
         tshark ln -s /Applications/Wireshark.app/Contents/MacOS/tshark /usr/local/bin/tshark
 '''
-def sniff_website(trace_count, website, name, packet_count = 1000):
+def sniff_website(trace_count, website, name, packet_count = 1500):
     MYDIR = (f"traces/{name}")
     if not os.path.isdir(MYDIR):
         print(f"Folder {MYDIR} does not exist. Creating new....")
