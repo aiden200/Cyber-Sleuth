@@ -540,7 +540,7 @@ def report_to_user(website_name, matched_list_32):
     if match_count_50_more == 0 and match_count_50_less == 1:
         return("There is a weak possibility that " + website_name + " is present in this trace as there is " + str(match_count_50_less) + " IP address match that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
-def make_charts():
+def make_charts(log):
     if not os.path.exists("bar_charts"):
         log.info("Creating directory bar_charts")
         os.mkdir("bar_charts")

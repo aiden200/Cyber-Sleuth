@@ -374,7 +374,7 @@ class UploadTracePage(tk.Frame):
             label.pack(side="top", fill="x", pady=10)
     
     def start_report(self) -> None:
-        log.info(f"Building report with filename chosen: {filename}")
+        log.info(f"Building report with filename chosen: {PLACEHOLDER}")
         self.label1 = tk.Label(self, text="Building report in progress...")
         self.label1.pack(side="top", fill="x", pady=10)
         if PLACEHOLDER != None:
