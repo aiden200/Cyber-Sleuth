@@ -143,6 +143,12 @@ class InstructionsPage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="Instructions", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
+        
+        label2 = tk.Label(self, text="\n1. Make sure you're connected to the internet.\n\n2. Shut down any apps or browsers running on your computer and turn off Bluetooth.\n\n3. Build a background profile.\n\n4. Build website profiles for websites you want to identify in your network traffic.\n\n5. Upload a network traffic trace (.pcap or .pcapng) then click"+ '"generate report"'+" to see which of your profiled\nwebsites were identified in the trace.",justify='left')
+        label2.pack(padx=.06, pady=10)
+        label3 = tk.Label(self, text="To generate network traffic traces, we recommend using Wireshark: www.wireshark.org/download.html",justify='left', font='Times 16 bold')
+        label3.pack(padx=.06, pady=10)
+        
         button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
@@ -412,6 +418,10 @@ class AboutPage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="About This Project", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
+        
+        label2 = tk.Label(self, text="The Trace Analyzer was built by 5 senior CS students at Carleton College: Aiden Chang, Anders Shenholm,\n Jeylan Jones, Luke Mager, and Shaun Baron-Furuyama. Our goal was to design a system for determining which\nwebsites are present in a network traffic trace.\n\nAfter taking and examining many network traces, we concluded that 24-bit filtering of IP addresses would be the\nmost reliable and broadly-applicable method for profiling web applications. Our project offers insight into how\na malicious actor (i.e. person-in-the-middle) could gather information about one's online activity even from\nencrypted network traffic. We also hope that it's a fun, accessible tool that people can use to learn about the\ninternet.\n\n\nFor questions or feedback, please don't hesitate to contact us!")
+        label2.pack(side="top", fill="x", pady=10)
+        
         button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
