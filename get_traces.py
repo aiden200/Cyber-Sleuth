@@ -567,14 +567,18 @@ def make_charts():
         if profile in exclusions:
             continue
         df = pd.read_csv(f"ip_profiles/{profile}", names=cols, header=None)
+        df.sort_values(by=df.columns[1], inplace=True, ascending=False)
+        df.head(n = 15) # setting the number of IP addresses displayed to max 15
         fig = px.bar(df, x="ip_address", y="frequency_percentage",
                    title="IP Address Frequency",
+                   color = "frequency_percentage",
                    labels={
                     "ip_address" : "IP Address",
-                    "frequency_percentage" : "Percentage of Times IP Address was Present in Each Trace"}
+                    "frequency_percentage" : "IP presence frequency"}
                     )
-        fig.update_xaxes(categoryorder='category ascending')
-        fig.show()
+        fig.update_xaxes(categoryorder='category ascending') # Possibly change this so it's ordered based on frquency
+        fig.update_layout(xaxis_tickangle=45)
+        fig.update_coloraxes(showscale=False)
         fig.write_image(f"bar_charts/{profile}fig.jpeg")  
 
 
@@ -601,7 +605,7 @@ def main():
     # below from shaun's branch
 
 
-    add_headers_to_profiles()
+    # add_headers_to_profiles()
     make_charts()
 
     '''
