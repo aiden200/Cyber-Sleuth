@@ -41,6 +41,7 @@ import chart_studio.plotly as py
 import cufflinks as cf
 import plotly.express as px
 import plotly.graph_objects as go
+import re
 
 '''
 Installs chromedriver
@@ -540,30 +541,39 @@ def report_to_user(website_name, matched_list_32):
     if match_count_50_more == 0 and match_count_50_less == 1:
         return("There is a weak possibility that " + website_name + " is present in this trace as there is " + str(match_count_50_less) + " IP address match that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
-def make_charts(log):
-    if not os.path.exists("bar_charts"):
-        log.info("Creating directory bar_charts")
-        os.mkdir("bar_charts")
+
+
+
+def make_profile_graphs():
+     if not os.path.exists("profile_graphs"):
+        log.info("Creating directory profile_graphs")
+        os.mkdir("profile_graphs")
     exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
     ip_profiles = map(os.path.basename, glob("ip_profiles/*"))
     cols = ["ip_address", "frequency_percentage"]
     for profile in ip_profiles:
+        graph_name = re.sub(r'.csv', '', profile)
         try:
             if profile in exclusions:
                 continue
             df = pd.read_csv(f"ip_profiles/{profile}", names=cols, header=None)
+            df.sort_values(by=df.columns[1], inplace=True, ascending=False)
+            df = df.head(n = 15) # setting the number of IP addresses displayed to max 15
             fig = px.bar(df, x="ip_address", y="frequency_percentage",
                     title="IP Address Frequency",
+                    color = "frequency_percentage",
                     labels={
                         "ip_address" : "IP Address",
-                        "frequency_percentage" : "Percentage of Times IP Address was Present in Each Trace"}
+                        "frequency_percentage" : "IP presence frequency"}
                         )
-            fig.update_xaxes(categoryorder='category ascending')
-            fig.show()
-            fig.write_image(f"bar_charts/{profile}fig.jpeg")
-            log.info(f"Built graph {profile} in bar_charts/{profile}fig.jpeg")
+            fig.update_xaxes(categoryorder='category ascending') # consider changing this so it's ordered based on frquency
+            fig.update_layout(xaxis_tickangle=45)
+            fig.update_coloraxes(showscale=False)
+            fig.write_image(f"profile_graphs/{graph_name}fig.jpeg")
+            log.info(f"Built graph {graph_name} in profile_graphs/{profile}fig.jpeg")
         except Exception as e:
-            log.warning(f"Failed to generate graph {profile} with exception {e}")
+             log.warning(f"Failed to generate graph {graph_name} with exception {e}")
+
 
 
 def make_individual_charts(profile, log):
@@ -586,6 +596,28 @@ def make_individual_charts(profile, log):
         fig.update_xaxes(categoryorder='category ascending')
         fig.show()
         fig.write_image(f"bar_charts/{profile}fig.jpeg")
+
+
+def make_noisy_match_graph(matched_list, graph_name): 
+    if not os.path.exists("match_graphs"): 
+        log.info("Creating directory match_graphs") 
+        os.mkdir("match_graphs") 
+    try: 
+        df = pd.DataFrame(matched_list, columns=['ip_address', 'match_frequency']) 
+        df.sort_values(by="match_frequency", inplace=True, ascending=False) 
+        fig = px.bar(df, x="ip_address", y="match_frequency", 
+                     title = "Frequency of IP Address Match", 
+                     color = "match_frequency", 
+                     labels={ 
+                    "ip_address" : "IP Address", 
+                    "match_frequency" : "Address Match Percentage" })
+        fig.update_xaxes(categoryorder='category ascending') 
+        fig.update_layout(xaxis_tickangle=45) 
+        fig.update_coloraxes(showscale=False) 
+        fig.update_yaxes(rangemode="tozero") 
+        fig.write_image(f"match_graphs/{graph_name}fig.jpeg") 
+    except Exception as e:
+        log.warning(f"Failed to generate graph {graph_name} with exception {e}")
 
 
 def main():
