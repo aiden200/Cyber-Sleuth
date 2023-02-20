@@ -318,7 +318,7 @@ def check_website_in_noisy_trace(file, name):
     else:
         try:
             profile_ip_list = get_profile_ips(f"ip_profiles/{name}.csv", frequency = True)
-            print(profile_ip_list)
+            # print(profile_ip_list)
 
             with open(f'csv_files/compare_file.csv','w') as f:
                 subprocess.run(f"tshark -r {file} \
@@ -558,8 +558,8 @@ def add_headers_to_profiles():
 
 
 def make_charts():
-    if not os.path.exists("bar_charts"):
-        os.mkdir("bar_charts")
+    if not os.path.exists("profile_graphs"):
+        os.mkdir("profile_graphs")
     exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
     ip_profiles = map(os.path.basename, glob("ip_profiles/*"))
     cols = ["ip_address", "frequency_percentage"]
@@ -576,10 +576,33 @@ def make_charts():
                     "ip_address" : "IP Address",
                     "frequency_percentage" : "IP presence frequency"}
                     )
-        fig.update_xaxes(categoryorder='category ascending') # Possibly change this so it's ordered based on frquency
+        fig.update_xaxes(categoryorder='category ascending') # consider changing this so it's ordered based on frquency
         fig.update_layout(xaxis_tickangle=45)
         fig.update_coloraxes(showscale=False)
-        fig.write_image(f"bar_charts/{profile}fig.jpeg")  
+        fig.write_image(f"profile_graphs/{profile}fig.jpeg")  
+
+
+def generate_noisy_match_graph(matched_list, graph_name):
+    if not os.path.exists("match_graphs"):
+        os.mkdir("match_graphs")
+    df = pd.DataFrame(matched_list, columns=['ip_address', 'match_frequency'])
+    df.sort_values(by="match_frequency", inplace=True, ascending=False)
+    fig = px.bar(df, x="ip_address", y="match_frequency",
+                 title = "Frequency of IP Address Match",
+                 color = "match_frequency",
+                 labels={
+                    "ip_address" : "IP Address",
+                    "match_frequency" : "Address Match Percentage"
+                 })
+    fig.update_xaxes(categoryorder='category ascending') 
+    fig.update_layout(xaxis_tickangle=45)
+    fig.update_coloraxes(showscale=False)
+    fig.update_yaxes(rangemode="tozero")
+    fig.write_image(f"match_graphs/{graph_name}fig.jpeg")
+    
+    
+    
+
 
 
 
@@ -606,42 +629,56 @@ def main():
 
 
     # add_headers_to_profiles()
-    make_charts()
+    # make_charts()
+    # spotify_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "spotify")
+    # print("------here are the spotify matches: ------")
+    # print(spotify_matches)
+    # generate_noisy_match_graph(spotify_matches)
+    # # print(spotify_matches)
 
-    '''
-    install_chromedriver()
-    print(" == 1 DONE ==")
-    filter_ips("chrome", "background")
-    print(" == 2 DONE ==")
-    build_background_profile(30)
-    print(" == 3 DONE ==")
-    build_chrome_profile(2)
-    print(" == 4 DONE ==")
-    build_profile_without_noise(2, "https://open.spotify.com", "spotify")
-    print(" == 5 DONE ==")
 
-    print(get_profile_ips("ip_profiles/espn.csv", True))
-    print(" == 6 DONE ==")
 
-    print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "spotify"))
-    spotify_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "spotify")
+
+    
+    # install_chromedriver()
+    # print(" == 1 DONE ==")
+    # filter_ips("chrome", "background")
+    # print(" == 2 DONE ==")
+    # build_background_profile(30)
+    # print(" == 3 DONE ==")
+    # build_chrome_profile(2)
+    # print(" == 4 DONE ==")
+    # build_profile_without_noise(10, "https://open.spotify.com", "spotify")
+    # print(" == 5 DONE ==")
+
+    # print(get_profile_ips("ip_profiles/espn.csv", True))
+    # print(" == 6 DONE ==")
+
+    # print(check_website_in_noisy_trace("traces/shaun_spotify_test.pcap", "spotify"))
+    spotify_matches = check_website_in_noisy_trace("traces/shaun_spotify_test.pcap", "spotify")
+    print("------here are the spotify matches: ------")
+    print(spotify_matches)
     print(" == 7 DONE ==")
+    spotify_mock_matches = [['104.19.188.97', '0.60'], ['52.35.21.164', '0.10'], ['252.21.58.122', '0.2']]
+    generate_noisy_match_graph(spotify_mock_matches, "spotify_match_graph")
+    # print(spotify_matches)
 
-    # print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
-    # espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
 
-    # print(report_to_user("espn", espn_matches))
-    print(report_to_user("spotify", spotify_matches))
-    print(" == 8 DONE ==")
-    sniff_website(2, "https://chess.com", "chess", 5000)
-    print(" == 9 DONE ==")
-    build_frequency_ip_profile("chess")
-    print(" == 10 DONE ==")
-    filter_ips("chess", "background")
-    print(" == 11 DONE ==")
-    filter_ips("chess", "chrome")
-    print(" == 12 DONE ==")
-    '''
+    # # print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
+    # # espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
+
+    # # print(report_to_user("espn", espn_matches))
+    # print(report_to_user("spotify", spotify_matches))
+    # print(" == 8 DONE ==")
+    # sniff_website(2, "https://chess.com", "chess", 5000)
+    # print(" == 9 DONE ==")
+    # build_frequency_ip_profile("chess")
+    # print(" == 10 DONE ==")
+    # filter_ips("chess", "background")
+    # print(" == 11 DONE ==")
+    # filter_ips("chess", "chrome")
+    # print(" == 12 DONE ==")
+    
     
 
 
