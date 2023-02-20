@@ -40,6 +40,7 @@ import chart_studio.plotly as py
 import cufflinks as cf
 import plotly.express as px
 import plotly.graph_objects as go
+import re
 
 
 '''
@@ -557,7 +558,7 @@ def add_headers_to_profiles():
         df.to_csv(f"ip_profiles/{profile}", index=False) # save to new csv file
 
 
-def make_charts():
+def make_profile_graphs():
     if not os.path.exists("profile_graphs"):
         os.mkdir("profile_graphs")
     exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
@@ -566,9 +567,10 @@ def make_charts():
     for profile in ip_profiles:
         if profile in exclusions:
             continue
+        graph_name = re.sub(r'.csv', '', profile)
         df = pd.read_csv(f"ip_profiles/{profile}", names=cols, header=None)
         df.sort_values(by=df.columns[1], inplace=True, ascending=False)
-        df.head(n = 15) # setting the number of IP addresses displayed to max 15
+        df = df.head(n = 15) # setting the number of IP addresses displayed to max 15
         fig = px.bar(df, x="ip_address", y="frequency_percentage",
                    title="IP Address Frequency",
                    color = "frequency_percentage",
@@ -579,7 +581,7 @@ def make_charts():
         fig.update_xaxes(categoryorder='category ascending') # consider changing this so it's ordered based on frquency
         fig.update_layout(xaxis_tickangle=45)
         fig.update_coloraxes(showscale=False)
-        fig.write_image(f"profile_graphs/{profile}fig.jpeg")  
+        fig.write_image(f"profile_graphs/{graph_name}fig.jpeg")  
 
 
 def generate_noisy_match_graph(matched_list, graph_name):
@@ -661,7 +663,9 @@ def main():
     print(" == 7 DONE ==")
     spotify_mock_matches = [['104.19.188.97', '0.60'], ['52.35.21.164', '0.10'], ['252.21.58.122', '0.2']]
     generate_noisy_match_graph(spotify_mock_matches, "spotify_match_graph")
+    make_profile_graphs()
     # print(spotify_matches)
+
 
 
     # # print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
