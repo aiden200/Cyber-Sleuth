@@ -544,8 +544,8 @@ def report_to_user(website_name, matched_list_32):
 
 
 
-def make_profile_graphs():
-     if not os.path.exists("profile_graphs"):
+def make_profile_graphs(log):
+    if not os.path.exists("profile_graphs"):
         log.info("Creating directory profile_graphs")
         os.mkdir("profile_graphs")
     exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
@@ -580,7 +580,6 @@ def make_individual_charts(profile, log):
     if not os.path.exists("bar_charts"):
         os.mkdir("bar_charts")
     exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
-    ip_profiles = map(os.path.basename, glob("ip_profiles/*"))
     cols = ["ip_address", "frequency_percentage"]
 
     if profile in exclusions:
@@ -598,9 +597,9 @@ def make_individual_charts(profile, log):
         fig.write_image(f"bar_charts/{profile}fig.jpeg")
 
 
-def make_noisy_match_graph(matched_list, graph_name): 
+def make_noisy_match_graph(matched_list, graph_name, log): 
     if not os.path.exists("match_graphs"): 
-        log.info("Creating directory match_graphs") 
+        log.info(f"Creating directory match_graphs in match_graphs/{graph_name}") 
         os.mkdir("match_graphs") 
     try: 
         df = pd.DataFrame(matched_list, columns=['ip_address', 'match_frequency']) 
@@ -616,8 +615,9 @@ def make_noisy_match_graph(matched_list, graph_name):
         fig.update_coloraxes(showscale=False) 
         fig.update_yaxes(rangemode="tozero") 
         fig.write_image(f"match_graphs/{graph_name}fig.jpeg") 
+        log.info(f"Success in generating graph located in match_graphs/{graph_name}fig.jpeg")
     except Exception as e:
-        log.warning(f"Failed to generate graph {graph_name} with exception {e}")
+        log.critical(f"Failed to generate graph {graph_name} with exception {e}")
 
 
 def main():

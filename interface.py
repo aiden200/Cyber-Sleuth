@@ -399,11 +399,12 @@ class UploadTracePage(tk.Frame):
                     try:
                         matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
                         report = report_to_user(profile_name, matches)
+                        make_noisy_match_graph(matches, profile_name, log)
                         print(report)
                     except Exception as e:
                         log.critical(f"Failed to generate report on file: {PLACEHOLDER}, with profile {profile_name}\n Exception: {e}")
 
-        make_charts(log)
+        # make_profile_graphs(log)
         self.label1.config(text="Generated Report")
         log.info(f"Generated report with file: {PLACEHOLDER}")
 
