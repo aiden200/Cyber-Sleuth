@@ -127,7 +127,8 @@ def sniff_website(trace_count, website, name, packet_count = 1500):
         os.makedirs(MYDIR)
 
     for i in range(1, trace_count + 1):
-        browser = webdriver.Chrome()
+        # browser = webdriver.Chrome(executable_path='/Users/shaunbaron-furuyama/Desktop/Comps/automation/comps/chromedriver') #shaun: delete the executable path
+        browser = webdriver.Chrome() 
         if website != 0:
             browser.get(website)
         capture = sniff(packet_count)
@@ -598,11 +599,15 @@ def make_individual_charts(profile, log):
 
 
 def make_noisy_match_graph(matched_list, graph_name, log): 
+    # breakpoint()
+    print("+++++++++ checkpoint 1 +++++++++++++++++")
     if not os.path.exists("match_graphs"): 
         log.info(f"Creating directory match_graphs in match_graphs/{graph_name}") 
         os.mkdir("match_graphs") 
+    print("+++++++++ checkpoint 2 +++++++++++++++++")
     try: 
         df = pd.DataFrame(matched_list, columns=['ip_address', 'match_frequency']) 
+        print("+++++++++ checkpoint 3 +++++++++++++++++")
         df.sort_values(by="match_frequency", inplace=True, ascending=False) 
         fig = px.bar(df, x="ip_address", y="match_frequency", 
                      title = "Frequency of IP Address Match", 
@@ -610,11 +615,17 @@ def make_noisy_match_graph(matched_list, graph_name, log):
                      labels={ 
                     "ip_address" : "IP Address", 
                     "match_frequency" : "Address Match Percentage" })
+        print("+++++++++ checkpoint 4 +++++++++++++++++")
         fig.update_xaxes(categoryorder='category ascending') 
         fig.update_layout(xaxis_tickangle=45) 
         fig.update_coloraxes(showscale=False) 
         fig.update_yaxes(rangemode="tozero") 
-        fig.write_image(f"match_graphs/{graph_name}fig.jpeg") 
+        print("+++++++++ checkpoint 5 +++++++++++++++++")
+        # fig.show()
+        # fig.write_image(f"TEST{graph_name}fig.jpeg")
+        fig.write_image(f"match_graphs/{graph_name}fig.jpeg")
+        # fig.write_image(f"bar_charts/{profile}fig.jpeg")
+        print("+++++++++ checkpoint 6 +++++++++++++++++")
         log.info(f"Success in generating graph located in match_graphs/{graph_name}fig.jpeg")
     except Exception as e:
         log.critical(f"Failed to generate graph {graph_name} with exception {e}")
