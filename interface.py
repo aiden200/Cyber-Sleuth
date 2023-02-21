@@ -400,9 +400,7 @@ class UploadTracePage(tk.Frame):
                 profile_name = values[:-4]
                 if profile_name != "background" and profile_name != "chrome":
                     try:
-                        # print("================ about to call on check_website_in_noisy_trace ==================")
                         matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
-                        # print("================ about to call on report_to_user ==================")
                         report = report_to_user(profile_name, matches)
                         print(f"here are the matched from messy trace in profile:::: {matches}")
                         print("================ about to call on make_noisy_match_graph ==================")
@@ -473,6 +471,7 @@ class BuiltProfilePage(tk.Frame):
         selected_name = f"{self.listbox.get(cs)}.csv"
         log.info(f"Making graph for profile: {selected_name}")
         make_individual_charts(selected_name, log)
+        # make_individual_profile_charts(selected_name, log)
         
 
 
