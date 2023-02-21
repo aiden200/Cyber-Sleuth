@@ -432,7 +432,7 @@ Notes:
 
 '''
 def reset_folders():
-    MYDIRS = ["traces", "csv_files", "ip_profiles"]
+    MYDIRS = ["traces", "csv_files", "ip_profiles","match_graphs","bar_charts"]
     for dir in MYDIRS:
         try:
             rmtree(dir)
