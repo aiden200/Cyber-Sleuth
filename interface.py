@@ -159,9 +159,10 @@ class BackgroundPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self.background_built = False
         self.controller = controller
-        self.number_of_traces = 2 # need to get the correct number of these CHANGE BACK TO 20
-        self.timeout = 60 # need to change this
+        self.number_of_traces = 20 # need to get the correct number of these CHANGE BACK TO 20
+        self.timeout = 600 # need to change this
 
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
@@ -218,13 +219,16 @@ class BackgroundPage(tk.Frame):
         except Exception as e:
             self.label1.config(text="Error in building background profile, please check log file")
             log.critical(f"Failed building background profile with exception {e}")
+        self.background_built = False
 
     def start_background_process(self) -> None:
         inp = self.inputtxt.get(1.0, "end-1c")
         if inp and inp.isdigit():
             self.timeout = int(inp)
-        newthread = threading.Thread(target=self.build_background_on_thread, args = (self.timeout,))
-        newthread.start()
+        if self.background_built == False:
+            self.background_built = True
+            newthread = threading.Thread(target=self.build_background_on_thread, args = (self.timeout,))
+            newthread.start()
     
         
 
@@ -290,9 +294,7 @@ class ProfilePage(tk.Frame):
             if BACKGROUND_BUILT and inp and domain:
                 try:
                     self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
-
-                    # CHANGE BACK TO 20
-                    newthread = threading.Thread(target=build_profile_without_noise, args = (2,inp,domain))
+                    newthread = threading.Thread(target=build_profile_without_noise, args = (20,inp,domain))
                     newthread.start()
                     log.info(f"Built profile for website: {inp}")
                 except Exception as e:
@@ -351,7 +353,9 @@ class UploadTracePage(tk.Frame):
 
         report_button = tk.Button(self, text="Generate Report", highlightbackground='black', height= 5, width=12,command=lambda:self.start_report())
         report_button.pack(pady=50)
-
+        
+        self.file_label = tk.Label(self, text="")
+        self.file_label.pack(side="top", fill="x", pady=10)
         back_button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
@@ -376,18 +380,17 @@ class UploadTracePage(tk.Frame):
             filename = filedialog.askopenfilename(title="Choose a File...", filetypes=(('Pcap Files', '.pcap .pcapng' ),))
             global PLACEHOLDER
             PLACEHOLDER = filename
-            label = tk.Label(self, text=f"Chosen: {filename}")
-            label.pack(side="top", fill="x", pady=10)
+            self.file_label.config( text=f"Chosen: {filename}")
+            
     
     def start_report(self) -> None:
         log.info(f"Building report with filename chosen: {PLACEHOLDER}")
-        self.label1 = tk.Label(self, text="Building report in progress...")
-        self.label1.pack(side="top", fill="x", pady=10)
+        self.file_label.config(text="Building report in progress...")
         if PLACEHOLDER != None:
             newthread = threading.Thread(target=self.generateReport)
             newthread.start()
         else:
-            self.label1.config(text="File not selected")
+            self.file_label.config(text="File not selected")
 
 
 
@@ -405,7 +408,7 @@ class UploadTracePage(tk.Frame):
                         log.critical(f"Failed to generate report on file: {PLACEHOLDER}, with profile {profile_name}\n Exception: {e}")
 
         # make_profile_graphs(log)
-        self.label1.config(text="Generated Report")
+        self.file_label.config(text="Generated Report")
         log.info(f"Generated report with file: {PLACEHOLDER}")
 
 
