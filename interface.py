@@ -161,7 +161,7 @@ class BackgroundPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.background_built = False
         self.controller = controller
-        self.number_of_traces = 20 # need to get the correct number of these CHANGE BACK TO 20
+        self.number_of_traces = 10 # need to get the correct number of these CHANGE BACK TO 20
         self.timeout = 600 # need to change this
 
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
@@ -294,7 +294,7 @@ class ProfilePage(tk.Frame):
             if BACKGROUND_BUILT and inp and domain:
                 try:
                     self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
-                    newthread = threading.Thread(target=build_profile_without_noise, args = (20,inp,domain))
+                    newthread = threading.Thread(target=build_profile_without_noise, args = (10,inp,domain))
                     newthread.start()
                     log.info(f"Built profile for website: {inp}")
                 except Exception as e:
