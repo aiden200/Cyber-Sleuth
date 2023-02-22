@@ -481,7 +481,6 @@ class BuiltProfilePage(tk.Frame):
         selected_name = f"{self.listbox.get(cs)}.csv"
         log.info(f"Making graph for profile: {selected_name}")
         make_individual_charts(selected_name, log)
-        # make_individual_profile_charts(selected_name, log)
         
 class WarningPage(tk.Frame):
 
