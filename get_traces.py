@@ -563,6 +563,7 @@ def make_individual_profile_charts(profile, log):
                     )
         fig.update_xaxes(categoryorder='category ascending')
         fig.update_layout(xaxis_tickangle=45)
+        # fig.show()
         fig.write_image(f"profile_graphs/{profile}fig.jpeg")
 
 
@@ -588,7 +589,28 @@ def make_individual_charts(profile, log):
                     "frequency_percentage" : "Percentage of Times IP Address was Present in Each Trace"}
                     )
         fig.update_xaxes(categoryorder='category ascending')
+        fig.show()
         fig.write_image(f"bar_charts/{profile}fig.jpeg")
+
+
+# def make_individual_charts(profile, log):
+#     if not os.path.exists("bar_charts"):
+#         os.mkdir("bar_charts")
+#     exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
+#     cols = ["ip_address", "frequency_percentage"]
+#     if profile in exclusions:
+#         log.warning(f"Cannot build profile {profile}")
+#     else:
+#         df = pd.read_csv(f"ip_profiles/{profile}", names=cols, header=None)
+#         fig = px.bar(df, x="ip_address", y="frequency_percentage",
+#                     title="IP Address Frequency",
+#                     labels={
+#                     "ip_address" : "IP Address",
+#                     "frequency_percentage" : "Percentage of Times IP Address was Present in Each Trace"}
+#                     )
+#         fig.update_xaxes(categoryorder='category ascending')
+#         fig.show()
+#         fig.write_image(f"bar_charts/{profile}fig.jpeg")
 
 
 def make_noisy_match_graph(matched_list, graph_name, log): 
