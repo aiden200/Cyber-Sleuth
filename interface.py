@@ -285,7 +285,7 @@ class ProfilePage(tk.Frame):
 
     def start_build_profile(self, traces, inp, domain):
         try:
-            build_profile_without_noise(1,inp,domain)
+            build_profile_without_noise(10,inp,domain)
             self.build_background_label.config(text = f"Done building website profile")
             log.info(f"Built profile for website: {inp}")
         except Exception as e:
