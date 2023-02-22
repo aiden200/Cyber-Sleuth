@@ -281,6 +281,16 @@ class ProfilePage(tk.Frame):
             self.last_background_built.config(text = f"Last Background Build: {dt_m}")
 
 
+    def start_build_profile(self, traces, inp, domain):
+        try:
+            build_profile_without_noise(1,inp,domain)
+            self.build_background_label.config(text = f"Done building website profile")
+            log.info(f"Built profile for website: {inp}")
+        except Exception as e:
+            self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
+            log.critical(f"Failed to build {inp} profile with exception {e}")
+
+
     def build_website_background(self) -> None:
         inp = self.inputtxt.get(1.0, "end-1c")
         self.lbl.config(text = "Selected Website: "+inp)
@@ -292,14 +302,10 @@ class ProfilePage(tk.Frame):
             self.build_background_label.config(text = "Google profiles cannot be built using this program")
         else:
             if BACKGROUND_BUILT and inp and domain:
-                try:
-                    self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
-                    newthread = threading.Thread(target=build_profile_without_noise, args = (10,inp,domain))
-                    newthread.start()
-                    log.info(f"Built profile for website: {inp}")
-                except Exception as e:
-                    self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
-                    log.critical(f"Failed to build {inp} profile with exception {e}")
+                self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
+                newthread = threading.Thread(target=self.start_build_profile, args = (10,inp,domain))
+                newthread.start()
+
             else:
                 self.build_background_label.config(text = "Background not built yet")
                 if BACKGROUND_BUILT:
@@ -395,20 +401,22 @@ class UploadTracePage(tk.Frame):
 
 
     def generateReport(self) -> None:
+        full_report = ''
         for values in os.listdir(f"{current_path}/ip_profiles"):
             if values[-3:] == "csv":
                 profile_name = values[:-4]
                 if profile_name != "background" and profile_name != "chrome":
                     try:
                         matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
-                        report = report_to_user(profile_name, matches)
-                        print(f"here are the matched from messy trace in profile:::: {matches}")
-                        print("================ about to call on make_noisy_match_graph ==================")
+                        report = report_to_user(profile_name, matches)  
+                        full_report = full_report + f"{report}\n here are the matched from messy trace in profile:::: {matches}\n"        
                         make_noisy_match_graph(matches, profile_name, log)
-                        print(report)
+                        print("Report generated in full_report.txt")
+                        log.info("Report generated in full_report.txt")
                     except Exception as e:
                         log.critical(f"Failed to generate report on file: {PLACEHOLDER}, with profile {profile_name}\n Exception: {e}")
-
+        with open('full_report.txt', 'w') as f:
+            f.write(full_report)
         # make_profile_graphs(log)
         self.file_label.config(text="Generated Report")
         log.info(f"Generated report with file: {PLACEHOLDER}")
