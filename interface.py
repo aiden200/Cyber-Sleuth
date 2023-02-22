@@ -171,6 +171,8 @@ class BackgroundPage(tk.Frame):
         warning_label.pack(side="top", fill="x", pady=10)
 
         dt_m = "Not built"
+        if not os.path.exists(f"{current_path}/ip_profiles"):
+            os.mkdir(f"{current_path}/ip_profiles")
         if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
             dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
         self.last_background_built = tk.Label(self, text=f"Last Background Build: {dt_m}", font="Times 16 bold", fg="dark blue")
