@@ -127,8 +127,7 @@ def sniff_website(trace_count, website, name, packet_count = 1500):
         os.makedirs(MYDIR)
 
     for i in range(1, trace_count + 1):
-        # browser = webdriver.Chrome(executable_path='/Users/shaunbaron-furuyama/Desktop/Comps/automation/comps/chromedriver') #shaun: delete the executable path
-        browser = webdriver.Chrome() 
+        browser = webdriver.Chrome()
         if website != 0:
             browser.get(website)
         capture = sniff(packet_count)
@@ -136,8 +135,10 @@ def sniff_website(trace_count, website, name, packet_count = 1500):
         browser.quit()
         try:
             with open(f'csv_files/{name}/{name}_trace{i}.csv','w') as f:
-                subprocess.run(f"tshark -r traces/{name}/{name}_trace{i}.pcap \
-                    -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split(), stdout =f)
+                shark_args = f"tshark -r traces/{name}/{name}_trace{i}.pcap \
+                      -Y -T fields -e frame.number -e ip.src -e ip.dst -e ipv6.src -e ipv6.dst".split()
+                shark_args.insert(4, "not (dns or mdns or arp or ssdp)")
+                subprocess.run(shark_args, stdout =f)
         except Exception as e:
             print(f"Iteration in sniff_website: {i}\n error: {e}")
 
@@ -432,7 +433,7 @@ Notes:
 
 '''
 def reset_folders():
-    MYDIRS = ["traces", "csv_files", "ip_profiles","match_graphs","bar_charts","profile_graphs"]
+    MYDIRS = ["traces", "csv_files", "ip_profiles","match_graphs","bar_charts"]
     for dir in MYDIRS:
         try:
             rmtree(dir)
@@ -543,47 +544,52 @@ def report_to_user(website_name, matched_list_32):
         return("There is a weak possibility that " + website_name + " is present in this trace as there is " + str(match_count_50_less) + " IP address match that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
 
-def make_individual_profile_charts(profile, log):
+
+
+def make_profile_graphs(log):
     if not os.path.exists("profile_graphs"):
         log.info("Creating directory profile_graphs")
         os.mkdir("profile_graphs")
-    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None}
+    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
+    ip_profiles = map(os.path.basename, glob("ip_profiles/*"))
     cols = ["ip_address", "frequency_percentage"]
-
-    if profile in exclusions:
-        log.warning(f"Cannot build profile {profile}")
-    else:
-        df = pd.read_csv(f"ip_profiles/{profile}", names=cols, header=None)
-        fig = px.bar(df, x="ip_address", y="frequency_percentage",
-                    title=f"IP Address Frequency for {profile}",
+    for profile in ip_profiles:
+        graph_name = re.sub(r'.csv', '', profile)
+        try:
+            if profile in exclusions:
+                continue
+            df = pd.read_csv(f"ip_profiles/{profile}", names=cols, header=None)
+            df.sort_values(by=df.columns[1], inplace=True, ascending=False)
+            df = df.head(n = 15) # setting the number of IP addresses displayed to max 15
+            fig = px.bar(df, x="ip_address", y="frequency_percentage",
+                    title="IP Address Frequency",
                     color = "frequency_percentage",
                     labels={
-                    "ip_address" : "IP Address",
-                    "frequency_percentage" : "Percentage of Times IP Address was Present in Each Trace"}
-                    )
-        fig.update_xaxes(categoryorder='category ascending')
-        fig.update_layout(xaxis_tickangle=45)
-        # fig.show()
-        fig.write_image(f"profile_graphs/{profile}fig.jpeg")
+                        "ip_address" : "IP Address",
+                        "frequency_percentage" : "IP presence frequency"}
+                        )
+            fig.update_xaxes(categoryorder='category ascending') # consider changing this so it's ordered based on frquency
+            fig.update_layout(xaxis_tickangle=45)
+            fig.update_coloraxes(showscale=False)
+            fig.write_image(f"profile_graphs/{graph_name}fig.jpeg")
+            log.info(f"Built graph {graph_name} in profile_graphs/{profile}fig.jpeg")
+        except Exception as e:
+             log.warning(f"Failed to generate graph {graph_name} with exception {e}")
 
 
-#TODO: Delete if make_invdividual_profile_charts() is fine.
+
 def make_individual_charts(profile, log):
     if not os.path.exists("bar_charts"):
         os.mkdir("bar_charts")
-    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None}
+    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
     cols = ["ip_address", "frequency_percentage"]
 
     if profile in exclusions:
         log.warning(f"Cannot build profile {profile}")
     else:
         df = pd.read_csv(f"ip_profiles/{profile}", names=cols, header=None)
-        df[:,0] =  df[:,0].astype(float) #TODO double check
-        df['match_frequency'] = df['match_frequency'].astype(float)
-        df.sort_values(by="match_frequency", inplace=True, ascending=False) 
-        df = df.head(n = 15) # sets the max numberof bars displayed to max 15
         fig = px.bar(df, x="ip_address", y="frequency_percentage",
-                    title=f"IP Address Frequency of {profile}",
+                    title="IP Address Frequency",
                     labels={
                     "ip_address" : "IP Address",
                     "frequency_percentage" : "Percentage of Times IP Address was Present in Each Trace"}
@@ -618,10 +624,8 @@ def make_noisy_match_graph(matched_list, graph_name, log):
         log.info(f"Creating directory match_graphs in match_graphs/{graph_name}") 
         os.mkdir("match_graphs") 
     try: 
-        df = pd.DataFrame(matched_list, columns=['ip_address', 'match_frequency'])
-        df['match_frequency'] = df['match_frequency'].astype(float)
+        df = pd.DataFrame(matched_list, columns=['ip_address', 'match_frequency']) 
         df.sort_values(by="match_frequency", inplace=True, ascending=False) 
-        df = df.head(n = 15) # sets the max numberof bars displayed to max 15
         fig = px.bar(df, x="ip_address", y="match_frequency", 
                      title = "Frequency of IP Address Match", 
                      color = "match_frequency", 
@@ -630,7 +634,9 @@ def make_noisy_match_graph(matched_list, graph_name, log):
                     "match_frequency" : "Address Match Percentage" })
         fig.update_xaxes(categoryorder='category ascending') 
         fig.update_layout(xaxis_tickangle=45) 
-        fig.write_image(f"match_graphs/{graph_name}fig.jpeg")
+        fig.update_coloraxes(showscale=False) 
+        fig.update_yaxes(rangemode="tozero") 
+        fig.write_image(f"match_graphs/{graph_name}fig.jpeg") 
         log.info(f"Success in generating graph located in match_graphs/{graph_name}fig.jpeg")
     except Exception as e:
         log.critical(f"Failed to generate graph {graph_name} with exception {e}")
@@ -638,6 +644,10 @@ def make_noisy_match_graph(matched_list, graph_name, log):
 
 def main():
     pass
+    # capture = scapy.sniff(1000, filter="udp or tcp")
+    # wrpcap(f"test.pcap", capture)
+    
+
     #reset_folders()
     #install_chromedriver()
     #filter_ips("chrome", "background")

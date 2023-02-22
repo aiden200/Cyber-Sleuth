@@ -76,7 +76,7 @@ class SampleApp(tk.Tk):
 
 
         self.frames = {}
-        for F in (StartPage, InstructionsPage, BackgroundPage, ProfilePage, UploadTracePage, AboutPage, BuiltProfilePage):
+        for F in (StartPage, InstructionsPage, BackgroundPage, ProfilePage, UploadTracePage, AboutPage, BuiltProfilePage, WarningPage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -119,7 +119,7 @@ class StartPage(tk.Frame):
         button7 = tk.Button(self, text="Check Built Profiles", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
                             command=lambda: controller.show_frame("BuiltProfilePage"))
         clear_button = tk.Button(self, text="Clear Folders", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
-                            command=lambda: reset_folders())
+                            command=lambda: controller.show_frame("WarningPage"))
         button5 = tk.Button(self, text="About", highlightbackground='black', height= 5, width=10,
                             command=lambda: controller.show_frame("AboutPage"))
         button6 = tk.Button(self, text="Quit", highlightbackground='black', height= 5, width=10, 
@@ -171,6 +171,8 @@ class BackgroundPage(tk.Frame):
         warning_label.pack(side="top", fill="x", pady=10)
 
         dt_m = "Not built"
+        if not os.path.exists(f"{current_path}/ip_profiles"):
+            os.mkdir(f"{current_path}/ip_profiles")
         if os.path.exists(f"{current_path}/ip_profiles/background.csv"):
             dt_m = datetime.datetime.fromtimestamp(os.path.getmtime(f"{current_path}/ip_profiles/background.csv"))
         self.last_background_built = tk.Label(self, text=f"Last Background Build: {dt_m}", font="Times 16 bold", fg="dark blue")
@@ -281,6 +283,16 @@ class ProfilePage(tk.Frame):
             self.last_background_built.config(text = f"Last Background Build: {dt_m}")
 
 
+    def start_build_profile(self, traces, inp, domain):
+        try:
+            build_profile_without_noise(traces,inp,domain)
+            self.build_background_label.config(text = f"Done building website profile")
+            log.info(f"Built profile for website: {inp}")
+        except Exception as e:
+            self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
+            log.critical(f"Failed to build {inp} profile with exception {e}")
+
+
     def build_website_background(self) -> None:
         inp = self.inputtxt.get(1.0, "end-1c")
         self.lbl.config(text = "Selected Website: "+inp)
@@ -292,14 +304,10 @@ class ProfilePage(tk.Frame):
             self.build_background_label.config(text = "Google profiles cannot be built using this program")
         else:
             if BACKGROUND_BUILT and inp and domain:
-                try:
-                    self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
-                    newthread = threading.Thread(target=build_profile_without_noise, args = (10,inp,domain))
-                    newthread.start()
-                    log.info(f"Built profile for website: {inp}")
-                except Exception as e:
-                    self.build_background_label.config(text = f"something went wrong in building website profile, please check log files")
-                    log.critical(f"Failed to build {inp} profile with exception {e}")
+                self.build_background_label.config(text = f"Building website background for {inp}\nName: {domain}")
+                newthread = threading.Thread(target=self.start_build_profile, args = (10,inp,domain))
+                newthread.start()
+
             else:
                 self.build_background_label.config(text = "Background not built yet")
                 if BACKGROUND_BUILT:
@@ -395,20 +403,22 @@ class UploadTracePage(tk.Frame):
 
 
     def generateReport(self) -> None:
+        full_report = ''
         for values in os.listdir(f"{current_path}/ip_profiles"):
             if values[-3:] == "csv":
                 profile_name = values[:-4]
                 if profile_name != "background" and profile_name != "chrome":
                     try:
                         matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
-                        report = report_to_user(profile_name, matches)
-                        print(f"here are the matched from messy trace in profile:::: {matches}")
-                        print("================ about to call on make_noisy_match_graph ==================")
+                        report = report_to_user(profile_name, matches)  
+                        full_report = full_report + f"{report}\n here are the matched from messy trace in profile:::: {matches}\n"        
                         make_noisy_match_graph(matches, profile_name, log)
-                        print(report)
+                        print("Report generated in full_report.txt")
+                        log.info("Report generated in full_report.txt")
                     except Exception as e:
                         log.critical(f"Failed to generate report on file: {PLACEHOLDER}, with profile {profile_name}\n Exception: {e}")
-
+        with open('full_report.txt', 'w') as f:
+            f.write(full_report)
         # make_profile_graphs(log)
         self.file_label.config(text="Generated Report")
         log.info(f"Generated report with file: {PLACEHOLDER}")
@@ -473,7 +483,22 @@ class BuiltProfilePage(tk.Frame):
         make_individual_charts(selected_name, log)
         # make_individual_profile_charts(selected_name, log)
         
+class WarningPage(tk.Frame):
 
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        warning_label = tk.Label(self, text=f"WARNING this action will delete all your prior data\nThis action will delete your profiles and graphs", font="Times 20 bold", fg="dark red")
+        warning_label.pack(side="top", fill="x", pady=10)
+        
+        report_button = tk.Button(self, text="Reset Folders", highlightbackground='black', height= 5, width=12,command=lambda: reset_folders())
+        report_button.pack(pady=50)
+
+
+        button = tk.Button(self, text="Back to Start Page",
+            highlightbackground='black', height= 5, width=12,
+            command=lambda: controller.show_frame("StartPage"))
+        button.pack(anchor="s", side="left")
 
 if __name__ == "__main__":
     app = SampleApp()
