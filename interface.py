@@ -402,6 +402,8 @@ class UploadTracePage(tk.Frame):
                     try:
                         matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
                         report = report_to_user(profile_name, matches)
+                        print(f"here are the matched from messy trace in profile:::: {matches}")
+                        print("================ about to call on make_noisy_match_graph ==================")
                         make_noisy_match_graph(matches, profile_name, log)
                         print(report)
                     except Exception as e:
@@ -469,6 +471,7 @@ class BuiltProfilePage(tk.Frame):
         selected_name = f"{self.listbox.get(cs)}.csv"
         log.info(f"Making graph for profile: {selected_name}")
         make_individual_charts(selected_name, log)
+        # make_individual_profile_charts(selected_name, log)
         
 class WarningPage(tk.Frame):
 
