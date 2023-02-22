@@ -76,7 +76,7 @@ class SampleApp(tk.Tk):
 
 
         self.frames = {}
-        for F in (StartPage, InstructionsPage, BackgroundPage, ProfilePage, UploadTracePage, AboutPage, BuiltProfilePage):
+        for F in (StartPage, InstructionsPage, BackgroundPage, ProfilePage, UploadTracePage, AboutPage, BuiltProfilePage, WarningPage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -119,7 +119,7 @@ class StartPage(tk.Frame):
         button7 = tk.Button(self, text="Check Built Profiles", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
                             command=lambda: controller.show_frame("BuiltProfilePage"))
         clear_button = tk.Button(self, text="Clear Folders", highlightbackground='black', height=2, width=15 ,padx=10, pady=10,
-                            command=lambda: reset_folders())
+                            command=lambda: controller.show_frame("WarningPage"))
         button5 = tk.Button(self, text="About", highlightbackground='black', height= 5, width=10,
                             command=lambda: controller.show_frame("AboutPage"))
         button6 = tk.Button(self, text="Quit", highlightbackground='black', height= 5, width=10, 
@@ -470,7 +470,22 @@ class BuiltProfilePage(tk.Frame):
         log.info(f"Making graph for profile: {selected_name}")
         make_individual_charts(selected_name, log)
         
+class WarningPage(tk.Frame):
 
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        warning_label = tk.Label(self, text=f"WARNING this action will delete all your prior data\nThis action will delete your profiles and graphs", font="Times 20 bold", fg="dark red")
+        warning_label.pack(side="top", fill="x", pady=10)
+        
+        report_button = tk.Button(self, text="Reset Folders", highlightbackground='black', height= 5, width=12,command=lambda: reset_folders())
+        report_button.pack(pady=50)
+
+
+        button = tk.Button(self, text="Back to Start Page",
+            highlightbackground='black', height= 5, width=12,
+            command=lambda: controller.show_frame("StartPage"))
+        button.pack(anchor="s", side="left")
 
 if __name__ == "__main__":
     app = SampleApp()
