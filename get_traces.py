@@ -512,36 +512,38 @@ def report_to_user(website_name, matched_list_32):
         return("We are very confident that " + website_name + " is not present in this trace as we did not observe any 32 bit IP address matches")
     else:
         match_count_100 = 0
-        match_count_50_more = 0
-        match_count_50_less = 0
+        match_count_70_90 = 0
+        match_count_40_60 = 0
+        match_count_10_30 = 0
         for match in matched_list_32:
             if float(match[1]) == 1.00:
                 match_count_100 += 1
-            elif float(match[1]) >= 0.50:
-                match_count_50_more += 1
+            elif float(match[1]) > 0.60:
+                match_count_70_90 += 1
+            elif float(match[1]) > 0.30:
+                match_count_40_60 += 1
             else:
-                match_count_50_less += 1
+                match_count_10_30 += 1
 
     if match_count_100 == 1:
         return("We are very confident that " + website_name + " is present in this trace as " + str(match_count_100) + " IP address in the noisy trace showed up in every trace when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
-    if match_count_100 > 1:
+    elif match_count_100 > 1:
         return("We are extremely confident that " + website_name + " is present in this trace as " + str(match_count_100) + " IP addresses in the noisy trace showed up in every trace when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
             
-    if match_count_50_more >= 1 and match_count_50_less >= 1:
-        return("We are pretty confident that " + website_name + " is present in this trace as there are both IP address matches that showed up in more than 50 percent of the traces and less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+    elif match_count_70_90 >= 1 and match_count_40_60 >= 1:
+        return("We are pretty confident that " + website_name + " is present in this trace as there are both IP address matches that showed up in more than 70-90 percent of the traces and less than 40-60 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
-    if match_count_50_more >= 1 and match_count_50_less == 0:
-         return("We are moderately confident that " + website_name + " is present in this trace as there are " + str(match_count_50_more) + " IP address matches that showed up in more than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+    elif match_count_70_90 >= 1 and match_count_40_60 == 0:
+         return("We are moderately confident that " + website_name + " is present in this trace as there are " + str(match_count_70_90) + " IP address matches that showed up in 70-90% percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
-    if match_count_50_more == 1 and match_count_50_less == 0:
-        return("It is plausible that " + website_name + " is present in this trace as there is " + str(match_count_50_more) + " IP address match that showed up in more than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+    elif match_count_70_90 == 0 and match_count_40_60 >= 1:
+        return("It is plausible that " + website_name + " is present in this trace as there are " + str(match_count_40_60) + " IP address matches that showed up in 40-60 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
+    
+    elif match_count_10_30 >= 1:
+        return("While there is a slim chance that " + website_name + " is present in this trace as there are " + str(match_count_10_30) + " IP address matches that showed up in 10-30 percent of the traces when you profiled " + website_name + ", we hypothesize that these matches are due to ad services running in your messy trace and in your profiled application" + "\n\n Refer to the graph for more detailed information on IP matches")
 
-    if match_count_50_more == 0 and match_count_50_less >= 1:
-        return("There is a possibility that " + website_name + " is present in this trace as there are " + str(match_count_50_less) + " IP address matches that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
-    if match_count_50_more == 0 and match_count_50_less == 1:
-        return("There is a weak possibility that " + website_name + " is present in this trace as there is " + str(match_count_50_less) + " IP address match that showed up in less than 50 percent of the traces when you profiled " + website_name + "\n\n Refer to the graph for more detailed information on IP matches")
 
 
 
