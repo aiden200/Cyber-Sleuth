@@ -93,7 +93,6 @@ class SampleApp(tk.Tk):
         '''Show a frame for the given page name'''
         frame = self.frames[page_name]
         frame.event_generate("<<ShowFrame>>")
-        # frame.winfo_toplevel().geometry("")
         frame.tkraise()
 
 
@@ -161,8 +160,8 @@ class BackgroundPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.background_built = False
         self.controller = controller
-        self.number_of_traces = 10 # need to get the correct number of these CHANGE BACK TO 20
-        self.timeout = 600 # need to change this
+        self.number_of_traces = 10 
+        self.timeout = 600 
 
         label = tk.Label(self, text="Tracing Computer Background", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
@@ -317,38 +316,6 @@ class ProfilePage(tk.Frame):
 
 
 
-
-
-# #User uploads pcap and pcapng files to UploadTraces Page
-# def UploadPcap(self, pkt=None) -> None:
-#         filename = filedialog.askopenfilename(title="Choose a File...", filetypes=(('Pcap Files', '.pcap .pcapng' ),))
-#     #get file pathway
-#         global PLACEHOLDER
-#         PLACEHOLDER = filename
-#         label = tk.Label(self, text=f"Chosen: {filename}")
-#         label.pack(side="top", fill="x", pady=10)
-# #         file = open(str(filename), 'rb')
-# #         print(str(file))
-# #         translate = str(file)
-# #         id1 = translate.index("=")
-# #         id2 = translate.index("'>")
-# #         path = ''
-# #         for i in range(id1 + len("=") + 1, id2):
-# #             path = path + translate[i]
-# #     #open new directory for uploaded traces``
-# #         if filename:
-# #             NEWDIR = (f"Uploaded Traces")
-# #             if not os.path.isdir(NEWDIR):
-# #                 os.makedirs(NEWDIR)
-# # #copies file from user's directory into Uploaded Traces folder
-# #         with open(f"Uploaded Traces/{os.path.basename(str(filename))}",'w') as f:
-# #             shutil.copy(path, NEWDIR)
-# #         file_label = tk.Label(text=str(os.path.basename(str(filename))))
-# #         file_label.place(relx = 0.5, rely = 0.5, anchor ='center')
-
-
-
-
 class UploadTracePage(tk.Frame):
             
     def __init__(self, parent, controller):
@@ -364,26 +331,17 @@ class UploadTracePage(tk.Frame):
         
         self.file_label = tk.Label(self, text="")
         self.file_label.pack(side="top", fill="x", pady=10)
+
+        self.generated_file_path = tk.Label(self, text="")
+        self.generated_file_path.pack(side="top", fill="x", pady=10)
+
+
         back_button = tk.Button(self, text="Back to Start Page",
             highlightbackground='black', height= 5, width=12,
             command=lambda: controller.show_frame("StartPage"))
         back_button.pack(anchor="s", side="left")
         
-     #def display_graph(self):
-        #for graphs in os.listdir(f"{current_path}/bar_charts"):
-            #newWindow = tk.Toplevel(self)
-            #newWindow.title((current_path) + "/bar_charts/" + graphs)
-            #newWindow.geometry("600x500")
 
-            #pic = Image.open(os.path.join(f"{current_path}/bar_charts/", graphs))
-            #resized = pic.resize((600, 450))
-            #graph = ImageTk.PhotoImage(resized)
-
-            #graph_label = tk.Label(newWindow, image = graph)
-            #graph_label.image = graph
-            #graph_label.place(anchor='center', relx=0.5, rely=0.5)
-
-    #User uploads pcap and pcapng files to UploadTraces Page
     def UploadPcap(self, pkt=None) -> None:
             filename = filedialog.askopenfilename(title="Choose a File...", filetypes=(('Pcap Files', '.pcap .pcapng' ),))
             global PLACEHOLDER
@@ -413,13 +371,13 @@ class UploadTracePage(tk.Frame):
                         report = report_to_user(profile_name, matches)  
                         full_report = full_report + f"{report}\n here are the matched from messy trace in profile:::: {matches}\n"        
                         make_noisy_match_graph(matches, profile_name, log)
-                        print("Report generated in full_report.txt")
+                        self.generated_file_path.config(text="Report generated in full_report.txt\nGraphs generated in match_graphs directory")
                         log.info("Report generated in full_report.txt")
                     except Exception as e:
                         log.critical(f"Failed to generate report on file: {PLACEHOLDER}, with profile {profile_name}\n Exception: {e}")
+                        self.generated_file_path.config(text="Failed to generate report please check log files")
         with open('full_report.txt', 'w') as f:
             f.write(full_report)
-        # make_profile_graphs(log)
         self.file_label.config(text="Generated Report")
         log.info(f"Generated report with file: {PLACEHOLDER}")
 
@@ -450,6 +408,9 @@ class BuiltProfilePage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="Built Profiles", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
+
+        label2 = tk.Label(self, text="Double click a built profile to generate graph.\n Note: You will not be able to select chrome and background")
+        label2.pack(side="top", fill="x", pady=10)
         
         self.bind("<<ShowFrame>>", self.on_show_frame)
 
