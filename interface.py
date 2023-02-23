@@ -10,9 +10,10 @@ Required packages:
 
 WARNING:
     Some m1 modules will Virtual environments might have issues with tkinter
+    Please reinstall your virtual environment if tkinter is giving issues
 
 Developed by: Aiden Chang, Jeylan Jones
-Last Updated: 1/28/2022 at 12:00 PM by Aiden Chang
+Last Updated: 2/22/2023 at 7:33 PM by Aiden Chang
 Please contact Aiden Chang for questions
 
 To activate GUI, type:
@@ -369,7 +370,7 @@ class UploadTracePage(tk.Frame):
                     try:
                         matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
                         report = report_to_user(profile_name, matches)  
-                        full_report = full_report + f"{report}\n here are the matched from messy trace in profile:::: {matches}\n"        
+                        full_report = full_report + f"{report}\n here are the matched ip addresses from our messy trace in profile and their respective frequency. Format: [IP, frequency]:::: {matches}\n"        
                         make_noisy_match_graph(matches, profile_name, log)
                         self.generated_file_path.config(text="Report generated in full_report.txt\nGraphs generated in match_graphs directory")
                         log.info("Report generated in full_report.txt")
