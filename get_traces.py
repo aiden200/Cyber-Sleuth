@@ -547,10 +547,25 @@ def report_to_user(website_name, matched_list_32):
 
 
 
+'''
+Function: make_individual_charts
+Generates a bar graph for a given website profile plotting the percentage of traces for which a given IP address was present.
+Saves the graph under the directory "bar_charts"
+    
+Parameters:
+    profile - string, the name of profile csv file
+    log -
+Returns:
+    function returns nothing
+    graph saved in /bar_charts/
+Example usage:
+    make_individual_charts("open.spotify.com.csv", log)
+Notes:
+'''
 def make_individual_charts(profile, log):
     if not os.path.exists("bar_charts"):
         os.mkdir("bar_charts")
-    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} #TODO: make it so I'm working only with final path name
+    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} 
     cols = ["ip_address", "frequency_percentage"]
     graph_name = re.sub(r'.csv', '', profile)
     if profile in exclusions:
@@ -563,7 +578,7 @@ def make_individual_charts(profile, log):
                     title=f"IP Address Frequency for {graph_name}",
                     labels={
                     "ip_address" : "IP Address",
-                    "frequency_percentage" : "Percentage of Times IP Address was Present in Each Trace"}
+                    "frequency_percentage" : "Percentage of Traces IP Address was Present"}
                     )
         fig.update_xaxes(categoryorder='category ascending')
         fig.update_layout(
@@ -578,7 +593,22 @@ def make_individual_charts(profile, log):
         fig.show()
         fig.write_image(f"bar_charts/{profile}fig.jpeg")
 
-
+'''
+Function: make_noisy_match_graph
+Generates a bar graph for plotting the percentage of matches for IP addresses in a profile in a messy trace.
+Saves the graph in /match_graphs/
+    
+Parameters:
+    matched_list - list of lists, a match pair list of an IP address and its associated frequency
+    graph_name - string, name of the graph (decided when called)
+    log
+Returns:
+    function returns nothing
+    graph saved in /match_graphs/
+Example usage:
+    make_noisy_match_graph(spotify_matches, "Spotify", log)
+Notes:
+'''
 def make_noisy_match_graph(matched_list, graph_name, log): 
     if not os.path.exists("match_graphs"): 
         log.info(f"Creating directory match_graphs in match_graphs/{graph_name}") 
