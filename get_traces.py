@@ -578,9 +578,10 @@ def make_individual_charts(profile, log):
                     title=f"IP Address Frequency for {graph_name}",
                     labels={
                     "ip_address" : "IP Address",
-                    "frequency_percentage" : "Percentage of Traces IP Address was Present"}
+                    "frequency_percentage" : "Frequency of Traces IP Address was Present"}
                     )
-        fig.update_xaxes(categoryorder='category ascending')
+        # fig.update_xaxes(categoryorder='category ascending')
+        fig.update_layout(xaxis = {'categoryorder' : 'total descending'})
         fig.update_layout(
             xaxis_tickangle=45,
             title={
@@ -623,8 +624,9 @@ def make_noisy_match_graph(matched_list, graph_name, log):
                      color = "match_frequency", 
                      labels={ 
                     "ip_address" : "IP Address", 
-                    "match_frequency" : "Address Match Percentage" })
-        fig.update_xaxes(categoryorder='category ascending') 
+                    "match_frequency" : "Address Match Frequency" })
+        # fig.update_xaxes(categoryorder='category ascending') 
+        fig.update_layout(xaxis = {'categoryorder' : 'total descending'})
         fig.update_layout(xaxis_tickangle=45) 
         fig.update_yaxes(rangemode="tozero") 
         fig.write_image(f"match_graphs/{graph_name}fig.jpeg") 
