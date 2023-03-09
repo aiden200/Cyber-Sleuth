@@ -370,7 +370,7 @@ class UploadTracePage(tk.Frame):
                     try:
                         matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
                         report = report_to_user(profile_name, matches)  
-                        full_report = full_report + f"{report}\n here are the matched ip addresses from our messy trace in profile and their respective frequency. Format: [IP, frequency]:::: {matches}\n"        
+                        full_report = full_report + f"{report}\n here are the matched ip addresses from our messy trace in profile and their respective frequency. Format: [IP, frequency]:::: {matches}\n\n\n"        
                         make_noisy_match_graph(matches, profile_name, log)
                         self.generated_file_path.config(text="Report generated in full_report.txt\nGraphs generated in match_graphs directory")
                         log.info("Report generated in full_report.txt")
