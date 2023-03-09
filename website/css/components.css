@@ -7,6 +7,9 @@
  * Components CSS includes Tabs, Custom forms, Tooltips, Buttons, Timelines, Modals, Accordions
 */
 /* Tabs */
+.center {
+  text-align: center;
+}
 .tab-item {
   background: none repeat scroll 0 0 #fff;
   display: none;

@@ -18,44 +18,14 @@
       <header>
          <div class="line">
             <div class="box">
-               <div class="m- l-2"></div>
-                  <img class="s-5 m-2 l-12 center" src="img/sleuth.jpg" width="0" height="0">
-               </div>
+               <img class="s-1 s-1 s-1 center" src="img/sleuth.jpg">
             </div>
          </div>
          <!-- TOP NAV -->  
          <div class="line">
             <nav class="margin-bottom">
-               <div class="top-nav s-12 l-10">
-                  <ul>
-                     <li><a>Home</a></li>
-                     <li>
-                        <a>Product</a>
-                        <ul>
-                           <li><a>Product 1</a></li>
-                           <li><a>Product 2</a></li>
-                           <li>
-                              <a>Product 3</a>
-                              <ul>
-                                 <li><a>Product 3-1</a></li>
-                                 <li><a>Product 3-2</a></li>
-                                 <li><a>Product 3-3</a></li>
-                              </ul>
-                           </li>
-                        </ul>
-                     </li>
-                     <li>
-                        <a>Company</a>
-                        <ul>
-                           <li><a>About</a></li>
-                           <li><a>Location</a></li>
-                        </ul>
-                     </li>
-                     <li><a>Contact</a></li>
-                  </ul>
-               </div>
-               <div class="hide-s hide-m l-2">
-                  <i class="icon-facebook_circle icon2x right padding"></i>
+               <div class="center">
+                  <h2><FONT COLOR="WHITE">CyberSleuth: Profling and Identifying Websites</FONT></h2>
                </div>
             </nav>
          </div>
@@ -66,55 +36,63 @@
             <div class="box margin-bottom">
                <div class="margin">
                   <!-- CONTENT -->
-                  <article class="s-12 m-7 l-8">
-                     <h1>Content</h1>
-                     <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet 
-                        dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit 
-                        lobortis nisl ut aliquip ex ea commodo consequat.
+                   <article>
+                     <h1 class="center">About</h1>
+                     <p>This product was built by 5 senior CS students at Carleton College: Aiden Chang, Anders Shenholm, Jeylan Jones, Luke Mager, and Shaun Baron-Furuyama. 
+                        Our goal was to design a system for determining which websites are present in a network traffic trace. 
+                        After taking and examining many network traces, we concluded that IP addresses would be the most reliable and broadly-applicable indicator for websites we want to profile. 
+                        Our project offers insight into how a malicious actor (i.e. person-in-the-middle) could gather information about one's online activity even from encrypted network traffic. We
+                         also hope that it's a fun, accessible tool that people can use to learn about the internet.
                      </p>
-                     <h3>Sub Header</h3>
-                     <p>Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore 
-                        eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril 
-                        delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue 
-                        nihil imperdiet doming id quod mazim placerat facer possim assum. 
+                     <br><br>
+                     <h2 class="center">Basic User Workflow</h2>
+                     <h4>Closing all tabs:</h4> 
+                     <p>
+                        After launching the GUI, the first thing the user should do is read the instructions. 
+                        The instructions will instruct you to shut down all processes excluding the GUI running on your device (this includes background processes like bluetooth and vpn).
+                     </p>
+                     <br>
+                     <h4>Profiling Background:</h4>
+                     <p>
+                        The first thing the user should do after is to profile their background. 
+                        When we are profiling applications, we build a profile by monitoring the ip addresses we detect on the users computer.
+                        To create an accurate background profile, we need the traces to be as clean as possible.
+                        The user can choose the timeout by typing it in the white box (the default is 600). 
+                        The user will not be able to access any other workflow before they have a background profile. 
+                        This process should take around 10 minutes.
+                     </p>
+                     <br>
+                     <h4>Profiling a Website:</h4>
+                     <p>
+                        Once the background Profile is made, the user can profile a website. 
+                        Simply type in the website name (ex: https://www.open.spotify.com) and the program should start profiling the website. 
+                        Once done, the program will save a profile of the website in your /ip_profiles folder. 
+                        It will also build a graph in the /bar_charts folder.
+                     </p>
+                     <br>
+                     <h4>Uploading Your Own Trace:</h4>
+                     <p>
+                        You can upload your own noisy trace to compare it to the built profiles.
+                        The uploaded trace must be a .pcap file. 
+                        After hitting the 'generate profile' button, the program will generate a text file report in the directory of this code as full_report.txt. 
+                        The code will also generate graph reports in /match_graphs.
+                     </p>
+                     <br>
+                     <h4>View your built profiles:</h4>
+                     <p>
+                        After hitting the 'generate profile' button, the program will generate a text file report in the directory of this code as full_report.txt. 
+                        The code will also generate graph reports in /match_graphs.
                      </p>
                   </article>
                   <!-- ASIDE NAV -->
-                  <div class="s-12 m-5 l-4">
-                     <h3>Navigation</h3>
-                     <div class="aside-nav">
-                        <ul>
-                           <li><a>Home</a></li>
-                           <li>
-                              <a>Product</a>
-                              <ul>
-                                 <li><a>Product 1</a></li>
-                                 <li><a>Product 2</a></li>
-                                 <li>
-                                    <a>Product 3</a>
-                                    <ul>
-                                       <li><a>Product 3-1</a></li>
-                                       <li><a>Product 3-2</a></li>
-                                       <li><a>Product 3-3</a></li>
-                                    </ul>
-                                 </li>
-                              </ul>
-                           </li>
-                           <li>
-                              <a>Company</a>
-                              <ul>
-                                 <li><a>About</a></li>
-                                 <li><a>Location</a></li>
-                              </ul>
-                           </li>
-                           <li><a>Contact</a></li>
-                        </ul>
-                     </div>
                   </div>
                </div>
             </div>
          </div>
-         <!-- CAROUSEL -->  
+         <!-- CAROUSEL --> 
+         <header class="center">
+            <h2>Product Demo</h2>
+         </header>   
          <div class="line">
             <div id="header-carousel" class="owl-carousel owl-theme margin-bottom">
                <div class="item"><img src="img/website_demo_images/demo_step_1.jpg" alt=""></div>
@@ -124,6 +102,21 @@
                <div class="item"><img src="img/website_demo_images/demo_step_5.jpg" alt=""></div>
                <div class="item"><img src="img/website_demo_images/demo_step_6.jpg" alt=""></div>
                <div class="item"><img src="img/website_demo_images/demo_step_7.jpg" alt=""></div>
+            </div>
+         </div>
+         <div class="line">
+            <div class="box margin-bottom">
+               <div class="margin">
+                  <!-- CONTENT -->
+                   <article>
+                     <h2 class="center">Does it work?</h2>
+                     <p>
+                        Anders Section
+                     </p>
+                  </article>
+                  <!-- ASIDE NAV -->
+                  </div>
+               </div>
             </div>
          </div>
          <!-- HOME PAGE BLOCK -->      
