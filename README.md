@@ -11,6 +11,11 @@ Table of contents
 * [Installation and Running the Code](#installation-and-running-the-code)
 * [About the Code](#about-the-code)
 * [User Workflow](#user-workflow)
+    * [Closing all tabs](#closing-all-tabs)
+    * [Profiling Background](#profiling-background)
+    * [Profiling a Website](#profiling-a-website)
+    * [Uploading your own trace](#uploading-your-own-trace)
+    * [View your built profiles](#view-your-built-profiles)
 <!--te-->
 
 
