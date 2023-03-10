@@ -4,7 +4,7 @@ Profiling and Identifying Websites Through Packet Tracing Analysis.
 Developed by Aiden Chang, Luke Major, Shaun Baron-Furuyama, Jeylan Jones, and Anders Shenholm
 Check out our [Website](https://cs.carleton.edu/cs_comps/2223/csiOlin/final-results/) and [Presentation Slides](https://docs.google.com/presentation/d/1U0ZS9FJ87KXPLVZnWpzN3VO7B7C6Hcd8K937XkT7x4Y/edit#slide=id.g1f48a6d175f_0_0)!
 
-Table of contents
+<ins>Table of contents</ins>
 =================
 
 <!--ts-->
@@ -27,7 +27,7 @@ Table of contents
 <!--te-->
 
 
-Installation and Running the Code
+<ins>Installation and Running the Code</ins>
 ============
 
 
