@@ -4,7 +4,7 @@ Profiling and Identifying Websites Through Packet Tracing Analysis.
 Developed by Aiden Chang, Luke Major, Shaun Baron-Furuyama, Jeylan Jones, and Anders Shenholm
 Check out our [Website](https://cs.carleton.edu/cs_comps/2223/csiOlin/final-results/) and [Presentation Slides](https://docs.google.com/presentation/d/1U0ZS9FJ87KXPLVZnWpzN3VO7B7C6Hcd8K937XkT7x4Y/edit#slide=id.g1f48a6d175f_0_0)!
 
-<ins>Table of contents</ins>
+Table of contents
 =================
 
 <!--ts-->
@@ -50,11 +50,11 @@ To launch the GUI, type:
 python3 interface.py
 ```
 
-About the Code
+<ins>About the Code</ins>
 ============
 &emsp; This project was part of a capstone project of Carleton College's Computer Science department. Developed by Aiden Chang, Luke Major, Shaun Baron-Furuyama, Jeylan Jones, and Anders Shenholm. Please visit our [website](https://cs.carleton.edu/cs_comps/2223/csiOlin/final-results/) and [Presentation Slides](https://docs.google.com/presentation/d/1U0ZS9FJ87KXPLVZnWpzN3VO7B7C6Hcd8K937XkT7x4Y/edit#slide=id.g1f48a6d175f_0_0) for more details! 
 
-User Workflow
+<ins>User Workflow</ins>
 ============
 All the details of each userworkflow is included in our [website](https://cs.carleton.edu/cs_comps/2223/csiOlin/final-results/) and [Presentation Slides](https://docs.google.com/presentation/d/1U0ZS9FJ87KXPLVZnWpzN3VO7B7C6Hcd8K937XkT7x4Y/edit#slide=id.g1f48a6d175f_0_0).
 ### Closing all tabs
@@ -78,7 +78,7 @@ All the details of each userworkflow is included in our [website](https://cs.car
 
 
 
-Initial Approach
+<ins>Initial Approach</ins>
 ============
 
 <details>
