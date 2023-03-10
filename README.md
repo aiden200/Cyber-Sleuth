@@ -16,7 +16,14 @@ Table of contents
     * [Profiling a Website](#profiling-a-website)
     * [Uploading your own trace](#uploading-your-own-trace)
     * [View your built profiles](#view-your-built-profiles)
-* [Behind the code](#behind-the-code)
+* [Initial Approach](#initial-approach)
+    * [Our Topic](#our-topic)
+    * [Importance](#why-is-this-important-and-who-does-this-project-serve)
+    * [Methodology](#methodology)
+    * [Initial Deliverables](#initial-deliverables)
+    * [App Profiles](#app-profiles)
+    * [Strategy Documents](#strategy-documents)
+    * [Machine Learning](#machine-learning)
 <!--te-->
 
 
@@ -72,6 +79,9 @@ All the details of each userworkflow is included in our [website](https://cs.car
 
 
 Initial Approach
+<details>
+<summary>Expand</summary>
+
 ============
 ### Our Topic
 &emsp; In the increasingly interconnected world we live in today, we take for granted our ability to log onto our favorite applications and instantly access data stored around the world. This paradigm has been the result of numerous decades of trial and error, with consistent efforts to improve computer capabilities and the common user experience. This process however, has obscured much of computers’ background tasks in favor of simple interfaces. So, how does this accessed data actually make its way to our machine? And in what ways do the applications on our machine communicate with the location that data is stored in? The answer to these questions varies by application, and examining the most popular ones will allow us to gain key insights into what kinds of intermediate exchanges are being used. 
@@ -95,13 +105,18 @@ Initial Approach
     - packet size
 
 &emsp; On top of the patterns we can find in Wireshark, we’ll also be using outside research to make our profiling more efficient. For example, if we can find detailed documentation for some app we want to profile, it could really help us know what to look for in that app’s network footprint. It’s also inevitable that we’ll want to look up the IP addresses that appear in our traces, for which we will need to do some online research. As these cases arise, we’ll carefully use outside sources.
+
 &emsp; We will begin to decipher network traffic by focusing on a single app. We’ll collect traces that isolate that app’s activity, and study them in detail to piece together a profile of its network traffic. We will use the features provided by Wireshark, as well as other research as is needed. In this early stage of the project, we envision our application profiles to include information regarding commonly used IP addresses and ports, typical packet lengths (this won’t be used extensively, as we know that packet length can vary based on router), protocol information (QUIC vs. TCP vs. UDP etc.), and timing patterns. By “timing patterns”, we mean how frequently a given application communicates with the machine to which it is sending data. Some applications may send lots of packets in short “bursts” and then wait before sending another burst, while other applications may send fewer packets in a more consistent manner. Since so many moving parts are involved in a single trace, it would of course be difficult to find any one primary detail to indicate the journey of a packet, if not impossible. To find a method for narrowing down necessary steps for application profiling, we will naturally need to rely on a number of assumptions that can only come from sheer time and exposure to relationships between these details. Each of the applications we profile will likely have differing patterns upon closer inspection; we’ll compile these patterns into an outline of a profile.
+
 &emsp; Once we have a working draft of a profile, we’ll look to identify that app in a packet trace containing many ‘conversations’ between many distinct applications running simultaneously. We can either take these traces ourselves or request them from our advisor for a stricter test of our profile. This will require us to carefully use our profiles to comb over these conversations in the packet trace, in order to decipher which applications are being run. In light of this, we may run into challenges in this process if there are applications that we haven’t profiled that look extremely similar in their traces to an application that we have profiled, or even if there are applications that we have profiled but resemble different ones when “background noise” from other applications interferes with our interpretation. We are expecting that the process of finding a profiled app in a busier trace will help us refine our profile and notice what really helps us identify an app’s network footprint in “the wild.” 
+
 &emsp; As we become confident in our first profile, we can branch out into profiling other apps, using our sharpened skills and intuition to build and test new profiles. We’re imagining a tiered priority system to dictate which apps we focus on, where we only move on to the next tier after having strong profiles for all apps in the current tier. 
+
 &emsp; We will develop strategy documents with each profile to describe a method for identifying apps based on their profile. It isn’t necessarily crucial that we have full strategy documents as soon as we have final drafts for each profile, but it could definitely be useful to have every researcher articulate the key pieces of the profile so that others less involved with that profile could pick it up quicker. This type of info can be written for a technical audience (us) as needed, so we wouldn’t really need final drafts for it to be useful. By the end of the project however, there should be no profile that doesn’t come with a polished strategy document. 
 
 ### Initial Deliverables
 Minimum: 3 app profiles, each with a strategy document.
+
 Maximum: 6+ app profiles, each with a strategy document. A program that automates app detection using our profiles and strategy documents.
 
 ### App Profiles
@@ -112,6 +127,8 @@ Maximum: 6+ app profiles, each with a strategy document. A program that automate
 
 ### Machine Learning
 &emsp; As a final part of this project, we hope to translate the information from our strategy documents that detail how to pick given applications out from a “messy” trace into a machine learning algorithm (or set of algorithms) that automates this process. This would mean that we could give any trace to our algorithm and we would be able to see if any of our profiled applications are running. We will know by the end of this term whether we will be able to do this aspect of the project, and we will continue to explore ways in which we can gather traces “from the wild” to give to our algorithm. We are considering using a neural network to do this automation, but should a different type of machine learning approach work better we will pivot and go in another direction.
+
+</details>
 
 
 
