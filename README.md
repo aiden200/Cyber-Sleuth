@@ -79,10 +79,11 @@ All the details of each userworkflow is included in our [website](https://cs.car
 
 
 Initial Approach
+============
+
 <details>
 <summary>Expand</summary>
 
-============
 ### Our Topic
 &emsp; In the increasingly interconnected world we live in today, we take for granted our ability to log onto our favorite applications and instantly access data stored around the world. This paradigm has been the result of numerous decades of trial and error, with consistent efforts to improve computer capabilities and the common user experience. This process however, has obscured much of computers’ background tasks in favor of simple interfaces. So, how does this accessed data actually make its way to our machine? And in what ways do the applications on our machine communicate with the location that data is stored in? The answer to these questions varies by application, and examining the most popular ones will allow us to gain key insights into what kinds of intermediate exchanges are being used. 
 
