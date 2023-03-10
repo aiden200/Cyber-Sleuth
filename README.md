@@ -24,6 +24,7 @@ Table of contents
     * [App Profiles](#app-profiles)
     * [Strategy Documents](#strategy-documents)
     * [Machine Learning](#machine-learning)
+* [Final Results and Findings](#final-results-and-findings)
 <!--te-->
 
 
@@ -133,8 +134,50 @@ Maximum: 6+ app profiles, each with a strategy document. A program that automate
 
 
 
+<ins>Final Results and Findings</ins>
+============
+
+<details>
+<summary>Expand</summary>
+
+### Our Task
+As our advisor Amy Csizmar Dalal once said
+> “Each Application has its own “fingerprint” - unique, or at least semi-unique, data patterns”
+
+Our plan was to find these "fingerprint" patterns. To achieve this, we would:
+- Evaluate tools and techniques to identify applications 
+- Isolate and measure data traffic
+- Create controlled experiments for detecting applications 
+- Create “in the wild” experiments to detect applications 
+- Write up data traffic signatures as application “profiles” 
+
+### Tools Used
+Our main tools used are:
+- [Wireshark](https://www.wireshark.org/). 
+    - Free open-source network protocol analyzer that will capture packets from a network connection.
+    - Used for manual trace analyzing.
+    - Used to open pcap files on a GUI.
+- [Scapy](https://scapy.net/)
+    - Python library that will collect a number of traces in the automation process.
+- [Selenium](https://www.selenium.dev/)
+    - Python library for browser automation
+
+### Initial Strategies
+As beginners in networks, our group spent the first 5 weeks learning about networks and running possible experimentations to find patterns in the network traffic. Some of our possible strategies for finding patterns in certain network interactions were to focus on components of a trace such as:
+- Type of protocol
+- Packet timings
+- IP addresses
+
+We also read a dozen machine learning papers to find possible machine learning approaches.
+
+In the end, our group decided to identify patterns using IP addresses.
 
 
+
+
+
+
+</details>
 
 
 
