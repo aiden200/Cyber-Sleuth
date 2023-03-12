@@ -12,7 +12,7 @@ Required packages:
     scapy - take the wireshark traces: documentation https://scapy.readthedocs.io/en/latest/usage.html
 
 Developed by: Aiden Chang, Anders Shenholm
-Last Updated: 1/19/2022 at 12:00 PM by Anders Shenholm
+Last Updated: 3/12/2022 at 12:00 PM by Anders Shenholm
 Please contact Aiden Chang for questions
 
 '''
@@ -415,6 +415,8 @@ def build_profile_without_noise(trace_count, website, name):
     filter_ips(name,"background")
     filter_ips(name,"chrome")
     print(f"Done with building {name}")
+    check_duplicates(name)
+    
     
 '''
 Function: reset_folders
@@ -635,30 +637,105 @@ def make_noisy_match_graph(matched_list, graph_name, log):
         log.critical(f"Failed to generate graph {graph_name} with exception {e}")
 
 
+'''
+Function: update_duplicate_ips
+Checks a new profile for ip addresses found in other profiles
+    
+Parameters:
+    name - str, the website we are profiling. This must be identical to the folder scanning. (ex: "spotify.com")
+Returns:
+    updates ip_profiles/duplicate_ips.csv if a new dupliacte is found
+Example usage:
+    update_duplicate_ips("spotify.com")
+Notes:
+'''
+def update_duplicate_ips(name):
+    if not os.path.isfile('ip_profiles/all_websites.csv'):  #don't need to run if this is the first profile
+        return
+    
+    profile_ips = {}
+    all_website_ips = {}
+    duplicate_ips = {}
+
+    with open(f'ip_profiles/{name}.csv', 'r') as source_file:
+        reader = csv.reader(source_file)
+        for row in reader:
+            profile_ips[row[0]] = 0
+
+    with open(f'ip_profiles/all_websites.csv', 'r') as source_file:
+        reader = csv.reader(source_file)
+        for row in reader:
+            all_website_ips[row[0]] = 0
+
+    for ip in profile_ips:
+        if ip in all_website_ips:
+            duplicate_ips[ip] = 0
+
+    with open(f'ip_profiles/duplicate_ips.csv', 'a') as dest_file:
+        writer = csv.writer(dest_file)
+        for ip in duplicate_ips:
+            writer.writerow([ip])
+
+'''
+Function: filter_duplicates
+    Filters all profiles for addresses found in multiple profiles
+Parameters:
+    none
+Returns:
+    updates ip_profiles
+Notes:
+    currently used every time a new profile is build
+'''
+def filter_duplicates():
+    if not os.path.isfile('ip_profiles/duplicate_ips.csv'):  #don't need to run if this is the first profile
+        return
+    
+    profiles = []
+    for filename in os.listdir("ip_profiles"):
+        if filename.endswith(".csv"):
+            profiles.append(filename.replace(".csv",""))
+
+    for profile in profiles:
+        if profile not in ["duplicate_ips", "all_websites"]:
+            filter_ips(profile, "duplicate_ips")
+
+'''
+Function: update_all_website_addresses
+    adds new ip addresses to list of all addresses found
+Parameters:
+    name - str, the website we are profiling. This must be identical to the folder scanning. (ex: "spotify.com")
+Returns:
+    updates ip_profiles/all_websites.csv
+Notes:
+    currently used every time a new profile is built
+'''
+def update_all_website_addresses(name):
+    with open(f'ip_profiles/{name}.csv', 'r') as source_file:
+        reader = csv.reader(source_file)
+        with open('ip_profiles/all_websites.csv', 'a', newline='') as dest_file:
+            writer = csv.writer(dest_file)
+            for row in reader:
+                writer.writerow([row[0]])
+
+'''
+Function: check_duplicates
+    wrapper for all functions that check for duplicates on a new profile
+Parameters:
+    name - str, the website we are profiling. This must be identical to the folder scanning. (ex: "spotify.com")
+Returns:
+    none
+Notes:
+    currently used every time a new profile is built
+'''
+
+def check_duplicates(name):
+    update_duplicate_ips(name)
+    update_all_website_addresses(name)
+    filter_duplicates()
+
 def main():
     pass
-    # capture = scapy.sniff(1000, filter="udp or tcp")
-    # wrpcap(f"test.pcap", capture)
     
-
-    #reset_folders()
-    #install_chromedriver()
-    #filter_ips("chrome", "background")
-    #build_background_profile(300)
-    #build_chrome_profile(2)
-    #print(get_profile_ips("ip_profiles/espn.csv", True))
-
-    #print(check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn"))
-    #espn_matches = check_website_in_noisy_trace("traces/noisy_spotify3.pcap", "espn")
-    #print(report_to_user("espn", espn_matches))
-    # sniff_website(2, "https://chess.com", "chess", 5000)
-    # build_frequency_ip_profile("chess")
-    # filter_ips("chess", "background")
-    # filter_ips("chess", "chrome")
-    
-    
-
-
 main()
 
     
