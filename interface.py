@@ -366,7 +366,7 @@ class UploadTracePage(tk.Frame):
         for values in os.listdir(f"{current_path}/ip_profiles"):
             if values[-3:] == "csv":
                 profile_name = values[:-4]
-                if profile_name != "background" and profile_name != "chrome":
+                if profile_name not in ["background", "chrome", "all_websites", "duplicate_ips"]:
                     try:
                         matches = check_website_in_noisy_trace(PLACEHOLDER, profile_name)
                         report = report_to_user(profile_name, matches)  
@@ -410,7 +410,7 @@ class BuiltProfilePage(tk.Frame):
         label = tk.Label(self, text="Built Profiles", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
 
-        label2 = tk.Label(self, text="Double click a built profile to generate graph.\n Note: You will not be able to select chrome and background")
+        label2 = tk.Label(self, text="Double click a built profile to generate graph.\n Note: You will not be able to select chrome, background, all_websites, or duplicate_ips")
         label2.pack(side="top", fill="x", pady=10)
         
         self.bind("<<ShowFrame>>", self.on_show_frame)

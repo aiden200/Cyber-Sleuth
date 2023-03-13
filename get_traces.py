@@ -567,7 +567,7 @@ Notes:
 def make_individual_charts(profile, log):
     if not os.path.exists("bar_charts"):
         os.mkdir("bar_charts")
-    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None} 
+    exclusions = {"background.csv":None, "chrome.csv":None, "google.csv":None, "all_websites.csv":None, "duplicate_ips.csv":None,} 
     cols = ["ip_address", "frequency_percentage"]
     graph_name = re.sub(r'.csv', '', profile)
     if profile in exclusions:
